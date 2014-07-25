@@ -17,7 +17,7 @@ $plugin['name'] = 'ied_plugin_composer';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '1.06';
+$plugin['version'] = '1.07';
 $plugin['author'] = 'Yura Linnyk / Stef Dawson / Steve Dickinson';
 $plugin['author_uri'] = 'http://stefdawson.com/';
 $plugin['description'] = 'Create, publish and edit plugins from within Textpattern CMS';
@@ -305,7 +305,7 @@ $ied_plugin_globals = array(
     'size_code' => '16777215',
 );
 
-if (@txpinterface == 'admin') {
+if (@txpinterface === 'admin') {
     add_privs('ied_plugin_composer','1,2');
     add_privs('plugin_prefs.ied_plugin_composer','1,2');
     register_tab('extensions', 'ied_plugin_composer', gTxt('ied_plugin_lbl_composer'));
@@ -332,7 +332,7 @@ function ied_pc_get_style_rules()
 input[type="submit"] { margin:0.3em 0.7em; }
 .ied_label { margin:0 0.2em 0 0.6em;}
 .ied_plugin_setup { float:right; margin:-2em 0 0;}
-.ied_plugin_resizehandle { cursor:s-resize; float:left; text-align:center; font-size:1em; width:65%; padding:2px 0 6px; }
+.ied_plugin_resizehandle { cursor:s-resize; float:left; text-align:center; font-size:1em; width:65%; padding:2px 0 4px; }
 .ied_plugin_info_bar { text-align:right; }
 #ied_plugin_jumpToLine { width:4em; margin:0 1em 0 0.4em; }
 .ied_editForm { width:{edwidth}; margin:0 auto; }
@@ -386,6 +386,7 @@ function ied_plugin_composer($evt, $stp)
         'ied_plugin_install'          => true,
         'ied_plugin_lang_set'         => true,
         'ied_plugin_table'            => false,
+
         'ied_plugin_multi_edit'       => true,
         'ied_plugin_prefs'            => false,
         'ied_plugin_restore'          => true,
@@ -964,6 +965,7 @@ function ied_plugin_edit($message='', $newfile='')
         $status = ($fileext=='php')? 1: 0;
     }
 
+
     $ifel = get_pref('ied_plugin_interface_elems');
     $distblock = (strpos($ifel, 'distribution') !== false);
     $styleblock = (strpos($ifel, 'style') !== false);
@@ -1001,6 +1003,7 @@ function ied_plugin_edit($message='', $newfile='')
     $stxtlink = ied_plugin_anchor($ied_pc_event, 'ied_plugin_save_as_textpack', gTxt('ied_plugin_export_textpack'), $namedLink);
     $vhelplinkfull = ($help) ? '[ ' .ied_plugin_anchor($ied_pc_event, 'ied_plugin_help_viewer', gTxt('ied_plugin_docs'), $namedLink) . ' ]' : '';
 
+
     $msgpop = '<div id="ied_plugin_msgpop"><input type="button" class="publish" value="'.gTxt('ok').'" onclick="ied_plugin_toggle_msgpop(\'0\');" /><h2>'.gTxt('ied_plugin_msgpop_lbl').'</h2><span class="ied_plugin_msgpop_content"></span></div>';
 
     $newname = fInput('text', 'newname', $name, '', '', '', INPUT_REGULAR);
@@ -1021,18 +1024,29 @@ function ied_plugin_edit($message='', $newfile='')
     $plugorder = selectInput('load_order', $orders, $load_order, 0, 0);
     $flaglist = checkbox('flags[]',PLUGIN_HAS_PREFS,(($flags & PLUGIN_HAS_PREFS)?1:0)) . '<label>'.gTxt('ied_plugin_flag_has_prefs').'</label>&nbsp;&nbsp;'
         .checkbox('flags[]',PLUGIN_LIFECYCLE_NOTIFY,(($flags & PLUGIN_LIFECYCLE_NOTIFY)?1:0)) . '<label>'.gTxt('ied_plugin_flag_lifecycle_notify').'</label>&nbsp;&nbsp;';
-//		.checkbox('flags[]',0x0004,(($flags & 0x0004)?1:0)) . '<label>Summat else</label>&nbsp;&nbsp;';
+//      .checkbox('flags[]',0x0004,(($flags & 0x0004)?1:0)) . '<label>Summat else</label>&nbsp;&nbsp;';
 
     $sub = fInput('submit', '', gTxt('save'), 'publish', '', '', '', '', 'ied_editSave');
     $codesub = (!$editfile) ? '<a class="navlink" name="ied_plugin_code_save" id="ied_plugin_code_save">' . gTxt('ied_plugin_code_save') . '</a>' : '';
 
     // Language info. ied_visible_langs is the user's choice of which ones they want to see available.
     // ied_available_langs is the list of actual, currently-installed langs
+    $string_count = ($tp_pfx) ? safe_rows('lang, count(*) as count', 'txp_lang', "name like '".$tp_pfx."%' group by lang") : array();
     $ied_listlangs = get_pref('ied_plugin_lang_choose', 'installed');
     $ied_visible_langs = ied_plugin_lang_list($ied_listlangs);
     $ied_available_langs = ($ied_listlangs == 'installed') ? $ied_visible_langs : ied_plugin_lang_list('installed');
     $dflt_lang = get_pref('ied_plugin_lang_default', $prefs['language']);
     $dflt_lang = array_key_exists($dflt_lang, $ied_visible_langs) ? $dflt_lang : $prefs['language'];
+    $dflt_lang_string_count = 0;
+
+    foreach ($string_count as $str_totals) {
+        if (isset($ied_visible_langs[$str_totals['lang']])) {
+            $ied_visible_langs[$str_totals['lang']] .= ' ['.$str_totals['count'].']';
+            if ($str_totals['lang'] === $dflt_lang) {
+                $dflt_lang_string_count = $str_totals['count'];
+            }
+        }
+    }
     $langsel = selectInput('ied_plugin_tp_lang', $ied_visible_langs, $dflt_lang, '', '', 'ied_plugin_tp_lang')
         .fInput('button', 'ied_plugin_tp_refresh', gTxt('ied_plugin_load'), '', '', '', '', '', 'ied_plugin_tp_refresh');
 
@@ -1078,6 +1092,7 @@ function ied_plugin_edit($message='', $newfile='')
         n. form(
             '<div id="ied_plugin_sub">'. ($sub).'</div>'
             .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_meta_visible') ? ' expanded' : '').'"><a href="#ied_plugin_meta">' . gTxt('ied_plugin_meta_legend') . '</a></h3><div id="ied_plugin_meta" class="toggle" style="display:'.(get_pref('pane_ied_plugin_meta_visible') ? 'block' : 'none').'">'
+
             .n. '<p><label>' . gTxt('name') . '</label>' . sp . $newname . sp. '<label>' . gTxt('version') . '</label>' . sp . $version_widget . $plugstatus . ( ($filename) ? tag(sp.sp.'('.$filename.')','span',' style="color:gray;"').hInput('filename',$filename) : '' ) . '</p>'
             .n. '<p><label>' . gTxt('description') . '</label>' . sp . $description_widget . '</p>'
             .n. '<p><label>' . gTxt('author') . '</label>' . sp . $author_widget . sp. '<label>' . gTxt('website') . '</label>' .sp. $author_uri_widget. '</p>'
@@ -1156,7 +1171,7 @@ jQuery.fn.selectRange = function (start, end) {
         if (this.setSelectionRange) {
             this.focus();
             this.setSelectionRange(start, end);
-        } elseif (this.createTextRange) {
+        } else if (this.createTextRange) {
             var range = this.createTextRange();
             range.collapse(true);
             range.moveEnd('character', end);
@@ -1243,15 +1258,20 @@ function ied_plugin_rtrim(str, chars)
 }
 function ied_plugin_update_tp_count()
 {
-    var tp_count = tp_warns = 0;
+    var tp_count = tp_warns = tp_has_content = 0;
 
-    jQuery('#ied_plugin_tp_strings ul label').each(function () {
+    jQuery('#ied_plugin_tp_strings ul li').each(function() {
+        var self = jQuery(this);
         tp_count++;
-        if (jQuery(this).hasClass('warning')) {
+        if (self.find('input').val() !== '') {
+            tp_has_content++;
+        }
+        if (self.find('label').hasClass('warning')) {
             tp_warns++;
         }
     });
-    jQuery('#ied_plugin_tp_count').empty().append('('+tp_count+ ' | '+tp_warns+ ' warnings)');
+    jQuery('#ied_plugin_tp_count').empty().append('(' +tp_count+ ' | ' +tp_has_content+ ' | ' +tp_warns+ ')');
+    jQuery('#ied_plugin_tp_lang option').find(':selected').data('string-count', tp_has_content);
 
     // Update the global var for use when loading strings
     ied_plugin_tp_total = tp_count;
@@ -1375,7 +1395,7 @@ jQuery(function () {
             status = xhr.find('http-status').attr('value')
             if (status == '200 OK') {
                 msgContent.append(xhr.find('ied_plugin_phpdoc').attr('value'));
-            } elseif (status == '501 Not Implemented') {
+            } else if (status == '501 Not Implemented') {
                 msgContent.append(xhr.find('error_msg').attr('value'));
             }
             ied_plugin_toggle_msgpop('1');
@@ -1411,8 +1431,8 @@ jQuery(function () {
     });
 
     // Save textpack string to database
-    public function ied_plugin_tp_save(event)
-    {
+    function ied_plugin_tp_save(event)
+	{
         var elem = jQuery(this);
         var isSel = elem.is('select');
         var tp_lbl = elem.nextAll('label').text();
@@ -1475,6 +1495,7 @@ jQuery(function () {
                     jQuery('#ied_plugin_tp_load_count').text(numFetched + '/' + ied_plugin_tp_total);
                 } else {
                     jQuery('#ied_plugin_tp_load_count').text('OK').hide('slow');
+                    ied_plugin_update_tp_count();
                 }
             },
             'json');
@@ -1719,6 +1740,7 @@ function ied_plugin_save_as_file()
 {
     global $prefs, $ied_plugin_globals;
 
+
     if (gps('name')) {
         $name = gps('name');
         $rs = safe_row('description, author, author_uri, version, code, help, type, load_order, flags', 'txp_plugin', "name='".doSlash($name)."'");
@@ -1746,7 +1768,7 @@ function ied_plugin_save_as_file()
     header('Content-type: text/plain');
     header('Content-Disposition: attachment; filename=' . (($zip === 'zip') ? $fnames[1] : $fnames[0]));
 
-    $types = array('Public' , 'Admin/Public' , 'Library' , 'Admin', 'Admin', 'Admin/Public'); // No gTxt() because the template is English
+    $types = array('Public' , 'Admin/Public' , 'Library' , 'Admin', 'Admin/AJAX', 'Admin/Public/AJAX'); // No gTxt() because the template is English
     $plugin['name'] = $name;
     $plugin['author'] = $author;
     $plugin['author_uri'] = $author_uri;
@@ -1756,8 +1778,8 @@ function ied_plugin_save_as_file()
     $plugin['type'] = $type;
     $plugin['order'] = $load_order;
     $plugin['flags'] = $flags;
-//	$plugin['allow_html_help'] = true;
-//	$plugin['help_raw'] = $help.$start_css.$css.$end_css;
+//  $plugin['allow_html_help'] = true;
+//  $plugin['help_raw'] = $help.$start_css.$css.$end_css;
     $plugin['help'] = ied_plugin_textile($name, $help, $css, $start_css, $end_css);
     $plugin['md5'] = md5( $plugin['code'] );
     if ($textpack) {
@@ -2040,7 +2062,7 @@ function ied_plugin_create()
 
         if ($ext == 'php') {
             $plugin = ied_plugin_read_file($_FILES['thefile']['tmp_name']);
-//	$newname = (empty($plugin['name'])) ? basename($_FILES['thefile']['name'], '.php') : $plugin['name'];
+//  $newname = (empty($plugin['name'])) ? basename($_FILES['thefile']['name'], '.php') : $plugin['name'];
             $newname = ($name) ? $name : doSlash($plugin['name']);
 
             if (empty($plugin['code'])) {
@@ -2173,7 +2195,7 @@ function ied_plugin_install($plugin='')
                         code         = '".doSlash($code)."',
                         code_restore = '".doSlash($code)."',
                         code_md5     = '".doSlash($md5)."',
-                        flags     	 = $flags",
+                        flags        = $flags",
                         "name        = '".doSlash($name)."'"
                     );
 
@@ -2193,7 +2215,7 @@ function ied_plugin_install($plugin='')
                         code_restore = '".doSlash($code)."',
                         code_md5     = '".doSlash($md5)."',
                         load_order   = '".$order."',
-                        flags   	 = $flags"
+                        flags        = $flags"
                     );
                 }
 
@@ -2234,12 +2256,12 @@ function ied_plugin_save_pane_state()
 }
 
 // -------------------------------------------------------------
-// Reurns an array of filenames;
+// Reurns an array of (file)names;
 //  1) the standard plugin
 //  2) the compressed plugin
 //  3) the PHP template
 //  4) the textpack
-function ied_plugin_get_name($name, $version, $lang='')
+function ied_plugin_get_name($name, $version = '', $lang='')
 {
     $ied_plugin_prefs = ied_pc_get_prefs();
 
@@ -2319,19 +2341,29 @@ function ied_plugin_read_file($filepath)
             // Found a plugin variable so extract it
             $parts = explode(" = ", $content[$idx]);
             $parts[0] = str_replace("'", "", $parts[0]); // Make the match easier!
-            $parts[1] = str_replace(";", "", $parts[1]); // Ditto
+            $semicolon = strpos($parts[1], ';');
+            $parts[1] = substr($parts[1], 0, $semicolon); // Ditto
             preg_match("/plugin\[(.*)\]/", $parts[0], $var); // Extract just the variable name
             if (is_numeric($parts[1])) {
                 $parts[1] = "'".$parts[1]."'";
             }
             preg_match("/.*'(.*)'.*/", $parts[1], $val); // Remove anything outside the quotes (e.g. $revision)
 
-            if ($var[1] == 'revision' && isset($val[1]) && !empty($val[1])) {
+            if (empty($val)) {
+                // Try unquoted - may be a constant
+                preg_match("/(.*)/", $parts[1], $val);
+                if (strtoupper($val[1]) == $val[1]) {
+                    // It's a constant so get its value
+                    $val[1] = constant($val[1]);
+                }
+            }
+
+            if ($var[1] === 'revision' && isset($val[1]) && !empty($val[1])) {
                 $revparts = explode(' ', trim($val[1], '$ '));
                 $val[1] = $revparts[count($revparts)-1];
                 $val[1] = (empty($val[1])) ? '' : '.' .$val[1];
             }
-            if ($var[1] == 'flags' && !isset($val[1])) {
+            if ($var[1] === 'flags' && !isset($val[1])) {
                 // Unquoted value; possibly constants
                 $val[1] = 0;
                 $constants = do_list($parts[1], '|');
@@ -2339,7 +2371,7 @@ function ied_plugin_read_file($filepath)
                     $val[1] |= (defined($constant)) ? constant($constant) : 0;
                 }
             }
-            if ($var[1] == 'textpack') {
+            if ($var[1] === 'textpack') {
                 $in_textpack = true;
                 continue;
             }
@@ -2363,7 +2395,7 @@ function ied_plugin_extract_hunk($content, $hunk, $cmnt="#", $delete=false)
 {
     $dlm = explode("|", $cmnt);
     $dlmStart = $dlm[0];
-    $dlmEnd = (count($dlm) > 1) ? $dlm[1] : '';
+    $dlmEnd = (isset($dlm[1])) ? $dlm[1] : '';
     $lines = ied_plugin_make_array($content);
 
     list ($start_delim, $end_delim) = ied_plugin_make_markers($hunk, $dlmStart, $dlmEnd);
@@ -2582,9 +2614,13 @@ EOJS;
             case "codemirror":
                 $out[] = <<<EOJS
 {$jsop}
-var ied_pc_editor = CodeMirror.fromTextArea(document.getElementById("plugin_editor"), {
+<script type="text/javascript">
+myTextArea = document.getElementById("plugin_editor");
+var ied_pc_editor = CodeMirror.fromTextArea(myTextArea, {
+    value: myTextArea.value
     {$cop}
 });
+</script>
 EOJS;
             break;
             case "codepress":
@@ -2761,7 +2797,7 @@ EOJS
                     $out .= td(fInput('text', $a['name'], $a['val'], 'edit', '', '', 50, '', $a['name']));
                     break;
                 case "ied_plugin_editor":
-//					$out .= td(selectInput($a['name'], array('none' => 'None', 'edit_area' => 'Edit Area', 'codepress' => 'CodePress'), $a['val'], '', ' onchange="ied_plugin_prefswap(this.id, this.value);"', $a['name']));
+//                  $out .= td(selectInput($a['name'], array('none' => 'None', 'edit_area' => 'Edit Area', 'codepress' => 'CodePress'), $a['val'], '', ' onchange="ied_plugin_prefswap(this.id, this.value);"', $a['name']));
                     $out .= td(selectInput($a['name'], array('none' => 'None', 'edit_area' => 'Edit Area'), $a['val'], '', ' onchange="ied_plugin_prefswap(this.id, this.value);"', $a['name']));
                     break;
                 case "ied_plugin_help_editor":
@@ -2849,7 +2885,7 @@ function ied_plugin_lang_list($flavour='installed')
     $ied_langs = array();
     if ($flavour == 'installed') {
         // Self-join to get all the installed langs and language strings in one step
-//		$installed_langs = safe_query('select t1.lang, t2.data from '.PFX.'txp_lang as t1, '.PFX.'txp_lang as t2 WHERE t1.lang = t2.name GROUP BY lang');
+//      $installed_langs = safe_query('select t1.lang, t2.data from '.PFX.'txp_lang as t1, '.PFX.'txp_lang as t2 WHERE t1.lang = t2.name GROUP BY lang');
         $ied_langs = safe_column('lang', 'txp_lang', '1=1 GROUP BY lang');
     } else {
         // Grab all available langs from the RPC server
@@ -2887,7 +2923,7 @@ function ied_plugin_textpack_build($name, $force_all = 0)
         $fetch_lang = gps('lang');
     }
     if (!$fetch_lang) {
-        $fetch_lang = ($force_all === 1) ? join(',', array_keys(ied_plugin_lang_list('installed'))) : $prefs['ied_plugin_lang_selected'];
+        $fetch_lang = ($force_all === 1) ? join(',', array_keys(ied_plugin_lang_list('installed'))) : get_pref('ied_plugin_lang_selected', '');
     }
 
     $tpout = array();
@@ -3307,7 +3343,7 @@ function ied_plugin_generate_phpdoc()
         send_xml_response(array('http-status' => '400 Bad Request'));
     }
 
-/*	$classInterfaces=$reflection->getInterfaces();
+/*  $classInterfaces=$reflection->getInterfaces();
     //get information about the interfaces
     if ($classInterfaces != null) {
     fwrite($hf,"\n</i>\t</td></tr>\n\t<tr>".
