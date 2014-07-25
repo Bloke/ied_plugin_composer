@@ -82,16 +82,21 @@ ied_plugin_editor_width => Plugin editor width
 ied_plugin_edit_new => Edit your new plugin
 ied_plugin_enable => Enabled
 ied_plugin_export => Export as {name}
+ied_plugin_export_composer => Export composer package
 ied_plugin_export_textpack => Export textpack(s)
 ied_plugin_export_zip => Export as {name} (compressed)
 ied_plugin_flags => Flags
 ied_plugin_flag_has_prefs => Has prefs
 ied_plugin_flag_lifecycle_notify => Event notify
 ied_plugin_fn_not_exist => (the function is probably javascript or mangled PHP)
+ied_plugin_gpl_1_0 => GPL-1.0
+ied_plugin_gpl_2_0 => GPL-2.0
+ied_plugin_gpl_3_0 => GPL-3.0
 ied_plugin_help_editor => Help editor
 ied_plugin_help_editor_options => Help editor configuration options
 ied_plugin_help_editor_path => Help editor URL
 ied_plugin_help_not_available => Plugin help not available
+ied_plugin_homepage => Plugin homepage URL
 ied_plugin_if_el_dist => Code for distribution
 ied_plugin_if_el_style => Help style block
 ied_plugin_if_settings => Interface settings
@@ -114,12 +119,18 @@ ied_plugin_lbl_op_code_first => Code first
 ied_plugin_lbl_op_help_first => Help first
 ied_plugin_lbl_setup => Plugin composer setup
 ied_plugin_lc_fired => Lifecycle event {event} fired for {name}
+ied_plugin_lgpl_2_0 => LGPL-2.0
+ied_plugin_lgpl_2_1 => LGPL-2.1
+ied_plugin_lgpl_3_0 => LGPL-3.0
 ied_plugin_lifecycle => Fire lifecycle event
 ied_plugin_lifecycle_options => Perform lifecycle actions on
 ied_plugin_load => Load
 ied_plugin_load_order => Load order
 ied_plugin_load_order_help => (1=first > 5=normal > 9=last)
 ied_plugin_meta_legend => Meta information
+ied_plugin_meta_save => Save meta
+ied_plugin_meta_saved => Meta info saved
+ied_plugin_meta_saved_fail => Meta info not saved
 ied_plugin_msgpop_lbl => phpdoc block
 ied_plugin_name_first => Please name the plugin before creating it
 ied_plugin_output_order => PHP export order
@@ -134,6 +145,7 @@ ied_plugin_prefs_deleted => Preferences deleted
 ied_plugin_renamed => (renamed)
 ied_plugin_rename_failed => (rename failed)
 ied_plugin_rename_file => Rename file
+ied_plugin_require_txp => Textpattern version dependency
 ied_plugin_restored => Plugin {name} restored.
 ied_plugin_restore_help => Roll back the plugin code to the most recent restore point
 ied_plugin_restore_point => Restore point
@@ -160,6 +172,8 @@ ied_plugin_updated => Plugin {name} updated
 ied_plugin_uploaded => Plugin {name} uploaded
 ied_plugin_upload_php => Upload plugin
 ied_plugin_utils_legend => Distribution (only for use after saving)
+ied_plugin_vcs_issue => Issue tracker URL
+ied_plugin_vcs_source => Source code URL
 ied_plugin_view_help => Help: {name}
 #@ied_plugin
 #@language fr-fr
@@ -285,11 +299,10 @@ if (!defined('txpinterface'))
 // TODO:
 //  * Use href() (from 4.6.+) for anchor creation to avoid double-encoded ampersands
 //  * Figure out why syntax checker doesn't jump to line number sometimes (AJAX fails with error but it's not handled)
-//  * Fix CSS/Markup so Textpack strings twisty label doesn't range right
-//  * Show which langs have installed strings in the distribution section so the correct langs in the select list can be chosen
-//  * Find out why uploading PHP files sometiems throws an error even though it succeeds
+//  * Show which langs have installed strings in the distribution section so the correct langs in the select list can be chosen. Update values in realtime using .data() to store lang name and current count then trigger the select to redraw itself?
 //  * jQuery on editor dropdowns in setup
 //  * phpdoc
+//  * Fix "ajax events should be attached to document" error
 
 global $ied_plugin_globals;
 
@@ -306,6 +319,10 @@ $ied_plugin_globals = array(
 );
 
 if (@txpinterface === 'admin') {
+    // Silence warnings because, although the plugin requires smd_crunchers for the
+    // Composer export feature, it'll function in a reduced capacity without it
+    @require_plugin('smd_crunchers');
+
     add_privs('ied_plugin_composer','1,2');
     add_privs('plugin_prefs.ied_plugin_composer','1,2');
     register_tab('extensions', 'ied_plugin_composer', gTxt('ied_plugin_lbl_composer'));
@@ -380,12 +397,14 @@ function ied_plugin_composer($evt, $stp)
         'ied_plugin_create'           => true,
         'ied_plugin_delete'           => true,
         'ied_plugin_edit'             => false,
+        'ied_plugin_export_composer'  => true,
         'ied_plugin_generate_phpdoc'  => true,
         'ied_plugin_help'             => true,
         'ied_plugin_help_viewer'      => false,
         'ied_plugin_install'          => true,
         'ied_plugin_lang_set'         => true,
         'ied_plugin_table'            => false,
+        'ied_plugin_meta_save'        => true,
         'ied_plugin_multi_edit'       => true,
         'ied_plugin_prefs'            => false,
         'ied_plugin_restore'          => true,
@@ -964,6 +983,7 @@ function ied_plugin_edit($message='', $newfile='')
         $status = ($fileext=='php')? 1: 0;
     }
 
+    $metadata = ied_plugin_read_meta($name);
     $ifel = get_pref('ied_plugin_interface_elems');
     $distblock = (strpos($ifel, 'distribution') !== false);
     $styleblock = (strpos($ifel, 'style') !== false);
@@ -1000,14 +1020,22 @@ function ied_plugin_edit($message='', $newfile='')
     $sphplink = ied_plugin_anchor($ied_pc_event, 'ied_plugin_save_as_php_file', gTxt('ied_plugin_save_as', array('{name}' => $fnames[2])), $namedLink);
     $stxtlink = ied_plugin_anchor($ied_pc_event, 'ied_plugin_save_as_textpack', gTxt('ied_plugin_export_textpack'), $namedLink);
     $vhelplinkfull = ($help) ? '[ ' .ied_plugin_anchor($ied_pc_event, 'ied_plugin_help_viewer', gTxt('ied_plugin_docs'), $namedLink) . ' ]' : '';
+    $complink = ied_plugin_anchor($ied_pc_event, 'ied_plugin_export_composer', gTxt('ied_plugin_export_composer'), $namedLink);
+
+    $vcss_val = (isset($metadata['source']) ? $metadata['source'] : $fnames[4]);
+    $vcsi_val = (isset($metadata['issues']) ? $metadata['issues'] : $fnames[5]);
 
     $msgpop = '<div id="ied_plugin_msgpop"><input type="button" class="publish" value="'.gTxt('ok').'" onclick="ied_plugin_toggle_msgpop(\'0\');" /><h2>'.gTxt('ied_plugin_msgpop_lbl').'</h2><span class="ied_plugin_msgpop_content"></span></div>';
 
     $newname = fInput('text', 'newname', $name, '', '', '', INPUT_REGULAR);
     $author_widget = fInput('text', 'author', $author, '', '', '', INPUT_REGULAR);
     $author_uri_widget = fInput('text', 'author_uri', $author_uri, '', '', '', INPUT_REGULAR);
+    $homepage_widget = fInput('text', 'homepage', (isset($metadata['homepage']) ? $metadata['homepage'] : ''), '', '', '', INPUT_REGULAR);
+    $vcss_widget = fInput('text', 'vcs_source', $vcss_val, '', '', '', INPUT_REGULAR);
+    $vcsi_widget = fInput('text', 'vcs_tracker', $vcsi_val, '', '', '', INPUT_REGULAR);
     $version_widget = fInput('text', 'version', $version, 'input-small', '', '',INPUT_SMALL) .sp. (($editfile) ? checkbox('rename_file', '1', 0, '','rename_file') . ' <label for="rename_file">'.gTxt('ied_plugin_rename_file').'</label>' : checkbox('restore_point', '1', 0, '','restore_point') . ' <label for="restore_point">'.gTxt('ied_plugin_restore_point').'</label>');
     $description_widget = fInput('text', 'description', $description, 'input-xlarge', '', '', INPUT_LARGE);
+    $keywords_widget = fInput('text', 'keywords', (isset($metadata['keywords']) ? $metadata['keywords'] : 'textpattern, plugin'), 'input-xlarge', '', '', INPUT_LARGE);
     $codeblock = '<textarea name="code" id="plugin_editor" rows="'.INPUT_REGULAR.'" class="code codepress php" maxlength="'.$ied_plugin_globals['size_code'].'">'.txpspecialchars($code).'</textarea><div class="ied_plugin_info_bar"><span>'.gTxt('ied_plugin_jump_to_line').'</span><input type="text" id="ied_plugin_jumpToLine" size="5" maxlength="6" /><span class="ied_plugin_charsRemain"></span></div>';
     $help_widget = '<textarea name="help" rows="'.INPUT_REGULAR.'" class="mceEditor" maxlength="'.$ied_plugin_globals['size_help'].'">'.txpspecialchars($help).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>';
     $css_widget = ($styleblock) ? '<textarea name="css" rows="'.INPUT_MEDIUM.'" class="code" maxlength="'.$ied_plugin_globals['size_css'].'">'.txpspecialchars($css).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>' : '';
@@ -1022,10 +1050,10 @@ function ied_plugin_edit($message='', $newfile='')
     $flaglist = checkbox('flags[]',PLUGIN_HAS_PREFS,(($flags & PLUGIN_HAS_PREFS)?1:0)) . '<label>'.gTxt('ied_plugin_flag_has_prefs').'</label>&nbsp;&nbsp;'
         .checkbox('flags[]',PLUGIN_LIFECYCLE_NOTIFY,(($flags & PLUGIN_LIFECYCLE_NOTIFY)?1:0)) . '<label>'.gTxt('ied_plugin_flag_lifecycle_notify').'</label>&nbsp;&nbsp;';
 //      .checkbox('flags[]',0x0004,(($flags & 0x0004)?1:0)) . '<label>Summat else</label>&nbsp;&nbsp;';
-
+    $require_txp = fInput('text', 'require_txp', (isset($metadata['require_txp']) ? $metadata['require_txp'] : txp_version), 'input-small', '', '',INPUT_SMALL);
     $sub = fInput('submit', '', gTxt('save'), 'publish', '', '', '', '', 'ied_editSave');
     $codesub = (!$editfile) ? '<a class="navlink" name="ied_plugin_code_save" id="ied_plugin_code_save">' . gTxt('ied_plugin_code_save') . '</a>' : '';
-
+    $metasub = (!$editfile) ? '<a class="navlink" name="ied_plugin_meta_save" id="ied_plugin_meta_save">' . gTxt('ied_plugin_meta_save') . '</a>' : '';
     // Language info. ied_visible_langs is the user's choice of which ones they want to see available.
     // ied_available_langs is the list of actual, currently-installed langs
     $string_count = ($tp_pfx) ? safe_rows('lang, count(*) as count', 'txp_lang', "name like '".$tp_pfx."%' group by lang") : array();
@@ -1044,6 +1072,7 @@ function ied_plugin_edit($message='', $newfile='')
             }
         }
     }
+
     $langsel = selectInput('ied_plugin_tp_lang', $ied_visible_langs, $dflt_lang, '', '', 'ied_plugin_tp_lang')
         .fInput('button', 'ied_plugin_tp_refresh', gTxt('ied_plugin_load'), '', '', '', '', '', 'ied_plugin_tp_refresh');
 
@@ -1089,11 +1118,16 @@ function ied_plugin_edit($message='', $newfile='')
         n. form(
             '<div id="ied_plugin_sub">'. ($sub).'</div>'
             .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_meta_visible') ? ' expanded' : '').'"><a href="#ied_plugin_meta">' . gTxt('ied_plugin_meta_legend') . '</a></h3><div id="ied_plugin_meta" class="toggle" style="display:'.(get_pref('pane_ied_plugin_meta_visible') ? 'block' : 'none').'">'
+            .n. '<span class="ied_plugin_edit_toolbar">' . $metasub . '</span>'
             .n. '<p><label>' . gTxt('name') . '</label>' . sp . $newname . sp. '<label>' . gTxt('version') . '</label>' . sp . $version_widget . $plugstatus . ( ($filename) ? tag(sp.sp.'('.$filename.')','span',' style="color:gray;"').hInput('filename',$filename) : '' ) . '</p>'
             .n. '<p><label>' . gTxt('description') . '</label>' . sp . $description_widget . '</p>'
+            .n. '<p><label>' . gTxt('keywords') . '</label>' . sp . $keywords_widget . '</p>'
             .n. '<p><label>' . gTxt('author') . '</label>' . sp . $author_widget . sp. '<label>' . gTxt('website') . '</label>' .sp. $author_uri_widget. '</p>'
+            .n. '<p><label>' . gTxt('ied_plugin_homepage') . '</label>' . sp . $homepage_widget . '</p>'
+            .n. '<p><label>' . gTxt('ied_plugin_vcs_source') . '</label>' . sp . $vcss_widget . '</p>'
+            .n. '<p><label>' . gTxt('ied_plugin_vcs_issue') . '</label>' . sp . $vcsi_widget . '</p>'
             .n. '<p><label>' . gTxt('ied_plugin_type') . '</label>' . sp . $plugtype . '</p>'
-            .n. '<p><label>' . gTxt('ied_plugin_flags') . '</label>' . sp . $flaglist .sp. '<label>' . gTxt('ied_plugin_load_order') . '</label>' . sp . $plugorder . sp.sp . gTxt('ied_plugin_load_order_help') . '</p>'
+            .n. '<p><label>' . gTxt('ied_plugin_flags') . '</label>' . sp . $flaglist .sp. '<label>' . gTxt('ied_plugin_load_order') . '</label>' . sp . $plugorder . sp.sp . gTxt('ied_plugin_load_order_help') . sp.sp. '<label>' . gTxt('ied_plugin_require_txp') . '</label>' . $require_txp . '</p>'
             .n. '</div></div>'
 
             .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_code_visible') ? ' expanded' : '').'"><a href="#ied_plugin_code">'.gTxt('ied_plugin_code_legend').'</a></h3><div id="ied_plugin_code" class="toggle" style="display:'.(get_pref('pane_ied_plugin_code_visible') ? 'block' : 'none').'">'
@@ -1132,6 +1166,7 @@ function ied_plugin_edit($message='', $newfile='')
             .n. '<div>' . $sziplink . '</div>'
             .n. '<div>' . $stxtlink . '</div>'
             .n. '<div>' . $sphplink . '</div>'
+            .n. '<div>' . $complink . '</div>'
             .n. '</div></div>'
 
             .n. sInput('ied_plugin_save')
@@ -1398,6 +1433,7 @@ jQuery(function () {
         }
 
         // code save barfed
+        // TODO: Find out why this doesn't work any more
         if (settings.data.indexOf('step=ied_plugin_code_save') > -1) {
             var msg = xhr.find('ied_plugin_msg').attr('value');
             var line = xhr.find('ied_plugin_err_line').attr('value');
@@ -1428,7 +1464,7 @@ jQuery(function () {
 
     // Save textpack string to database
     function ied_plugin_tp_save(event)
-	{
+    {
         var elem = jQuery(this);
         var isSel = elem.is('select');
         var tp_lbl = elem.nextAll('label').text();
@@ -1529,6 +1565,42 @@ jQuery(function () {
         event.preventDefault();
     });
 
+    // Handle saving meta
+    jQuery("#ied_plugin_meta_save").click(function(event) {
+        var msgarea = jQuery("#ied_plugin_messages");
+        msgarea.empty();
+        var metaobj = jQuery("#ied_plugin_meta");
+        var datablock = {};
+
+        jQuery(metaobj).find('input[type="text"], select').each(function() {
+            var obj = jQuery(this);
+            var objid = obj.attr('name');
+            datablock[objid] = obj.val();
+        });
+        jQuery(metaobj).find('input[type="radio"], input[type="checkbox"]').each(function() {
+            var obj = jQuery(this);
+            var objid = obj.attr('name');
+            if (obj.prop('checked') === true) {
+                datablock[objid] = obj.val();
+            }
+        });
+        var plugin = '{$name}';
+
+        metaobj.css('opacity', '0.4');
+        sendAsyncEvent(
+        {
+            event: textpattern.event,
+            step: 'ied_plugin_meta_save',
+            plugin: plugin,
+            data: datablock
+        }, function(data) {
+            metaobj.css({'opacity': '1'});
+            var msg = jQuery(data).find('ied_plugin_msg').attr('value');
+            eval(msg); // yuk!
+        });
+        event.preventDefault();
+    });
+
     // Handle saving code
     jQuery("#ied_plugin_code_save").click(function (event) {
         var msgarea = jQuery("#ied_plugin_messages");
@@ -1596,8 +1668,32 @@ function ied_plugin_save()
 {
     global $ied_plugin_globals, $prefs;
 
-    extract(doSlash(gpsa(array('name','newname','filename','code','author','author_uri','version','description','help','css','status','type','load_order','rename_file','restore_point','ied_plugin_tp_prefix'))));
+    extract(doSlash(gpsa(array(
+        'name',
+        'newname',
+        'filename',
+        'code',
+        'author',
+        'author_uri',
+        'version',
+        'description',
+        'help',
+        'css',
+        'status',
+        'type',
+        'load_order',
+        'rename_file',
+        'restore_point',
+        'ied_plugin_tp_prefix',
+        'keywords',
+        'require_txp',
+        'homepage',
+        'vcs_source',
+        'vcs_tracker',
+    ))));
     $flags = gps('flags');
+
+    $ied_plugin_prefs = ied_pc_get_prefs();
 
     list ($start_css, $end_css) = ied_plugin_make_markers("CSS", $ied_plugin_globals['css_start'], $ied_plugin_globals['css_end']);
     $extraMsg = $newfilename = $msg1 = $msg2 = '';
@@ -1720,6 +1816,16 @@ function ied_plugin_save()
 
         // Store the plugin textpack prefix
         ied_plugin_set_tp_prefix($newname, $ied_plugin_tp_prefix);
+
+        ied_plugin_store_meta($name, array(
+            'name' => $newname,
+            'keywords' => $keywords,
+            'homepage' => $homepage,
+            'license' => (isset($prefs['ied_plugin_license']) ? $prefs['ied_plugin_license'] : $ied_plugin_prefs['ied_plugin_license']['default']),
+            'source' => $vcs_source,
+            'issues' => $vcs_tracker,
+            'require_txp' => $require_txp,
+        ));
     }
     if ($msg2) {
         ied_plugin_table($msg2);
@@ -1732,11 +1838,85 @@ function ied_plugin_save()
 }
 
 // -------------------------------------------------------------
+function ied_plugin_store_meta($name, $data)
+{
+    $ini = ied_plugin_read_meta();
+
+    unset($ini[$name]);
+
+    $ini[$data['name']] = $data;
+
+    $out = array();
+
+    foreach ($ini as $section => $set) {
+        $out[] = n.'['.$section.']';
+        foreach ($set as $key => $val) {
+            if (is_array($val)) {
+                foreach ($val as $skey => $sval) {
+                    $out[] = $key.'[] = '.(is_numeric($sval) ? $sval : '"'.$sval.'"');
+                }
+            } else {
+                $out[] = "$key = ".(is_numeric($val) ? $val : '"'.$val.'"');
+            }
+        }
+    }
+
+    $metafile = ied_plugin_meta_filename();
+    ied_plugin_safe_write($metafile, implode("\r\n", $out));
+}
+
+// -------------------------------------------------------------
+function ied_plugin_safe_write($filename, $dataToSave)
+{
+    if ($fp = fopen($filename, 'w')) {
+        $startTime = microtime();
+        do {
+            $canWrite = flock($fp, LOCK_EX);
+
+            // If lock not obtained sleep for 0 - 100 milliseconds, to avoid collision and CPU load.
+            if (!$canWrite) {
+                usleep(round(rand(0, 100)*1000));
+            }
+        } while ((!$canWrite)and((microtime()-$startTime) < 1000));
+
+        // File was locked so information can be stored.
+        if ($canWrite) {
+            fwrite($fp, $dataToSave);
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+    }
+}
+
+// -------------------------------------------------------------
+function ied_plugin_read_meta($name=null)
+{
+    $metafile = ied_plugin_meta_filename();
+    $ini = array();
+    if (is_readable($metafile)) {
+        $ini = parse_ini_file($metafile, true);
+    }
+
+    $out = $ini;
+    if ($name !== null && isset($ini[$name])) {
+        $out = $ini[$name];
+    }
+
+    return $out;
+}
+
+// -------------------------------------------------------------
+function ied_plugin_meta_filename()
+{
+    global $prefs;
+
+    return rtrim($prefs['tempdir'], DS).DS.'ied_plugin_metastore.ini';
+}
+
+// -------------------------------------------------------------
 function ied_plugin_save_as_file()
 {
     global $prefs, $ied_plugin_globals;
-
-
     if (gps('name')) {
         $name = gps('name');
         $rs = safe_row('description, author, author_uri, version, code, help, type, load_order, flags', 'txp_plugin', "name='".doSlash($name)."'");
@@ -1888,6 +2068,190 @@ function ied_plugin_save_as_textpack()
     header('Content-Disposition: attachment; filename=' . $fnames[3]);
     echo $textpack;
     die();
+}
+
+// -------------------------------------------------------------
+function ied_plugin_export_composer()
+{
+    global $prefs, $plugins;
+
+    $ied_plugin_prefs = ied_pc_get_prefs();
+
+    if (gps('name')) {
+        $name = gps('name');
+        $rs = safe_row('description, author, author_uri, version, code, help, type, load_order, flags', 'txp_plugin', "name='".doSlash($name)."'");
+        extract(array_map('doSlash', $rs));
+
+        list($css,$help) = ($help) ? ied_plugin_extract_hunk($help, "CSS", "<!--|-->", true) : array('',$help);
+    } elseif (gps('filename')) {
+        $plugin=ied_plugin_read_file($prefs['plugin_cache_dir'].DS.gps('filename'));
+        extract(array_map('doSlash', $plugin));
+    }
+
+    // Figure out if the help is written in Textile (rudimentary check for hN. markup)
+    $helpline = '';
+    if ($help) {
+        $re = '/h[0-6](\(.*\))?\./';
+        $is_textile = (preg_match($re, $help)) ? true : false;
+        $helpfile = ($is_textile) ? 'README.textile' : 'README.html';
+        $helpline = n.' "help"        : {"file" : ["'.$helpfile.'"]}';
+    }
+
+    $manifest = <<<EOM
+{
+    "name"        : "{$name}",
+    "description" : "{$description}",
+    "version"     : "{$version}",
+    "type"        : $type,
+    "author"      : "{$author}",
+    "author_uri"  : "{$author_uri}",
+    "order"       : {$load_order},
+    "flags"       : {$flags},{$helpline}
+}
+EOM;
+
+    $metadata = ied_plugin_read_meta($name);
+    $package_folder = (isset($prefs['ied_plugin_packagist_user'])) ? $prefs['ied_plugin_packagist_user'] . '/' : '';
+
+    $keywords = (isset($metadata['keywords'])) ? $metadata['keywords'] : '';
+    $keywords = do_list($keywords);
+    $kws = array();
+    foreach ($keywords as $kw) {
+        if ($kw !== '') {
+            $kws[] = '"'.$kw.'"';
+        }
+    }
+    $keywords = join(',', $kws);
+
+    $homepage = (isset($metadata['homepage'])) ? $metadata['homepage'] : '';
+    $license = (isset($metadata['license'])) ? $metadata['license'] : $ied_plugin_prefs['ied_plugin_license']['default'];
+    $req_txp =  (isset($metadata['require_txp'])) ? $metadata['require_txp'] : txp_version;
+    $source = (isset($metadata['source'])) ? $metadata['source'] : '';
+    $issues = (isset($metadata['issues'])) ? $metadata['issues'] : '';
+
+    $license_file = false;
+    $http_status = null;
+
+    if ($license === 'none') {
+        $license_line = '';
+    } else {
+        $license_gtxt = 'ied_plugin_'.(str_replace(array('-', '.'), array('_', '_'), $license));
+        $license_line = n.' "license": "'.gTxt($license_gtxt).'",';
+
+        if (function_exists('curl_version')) {
+            $c = curl_init();
+            curl_setopt($c, CURLOPT_URL, 'http://www.gnu.org/licenses/'.$license.'.txt');
+            curl_setopt($c, CURLOPT_REFERER, hu);
+            curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($c, CURLOPT_VERBOSE, false);
+            curl_setopt($c, CURLOPT_TIMEOUT, 5);
+            $license_file = curl_exec($c);
+            $http_status = curl_getinfo($c, CURLINFO_HTTP_CODE);
+            if ($http_status !== 200) {
+                $license_file = false;
+            }
+            curl_close($c);
+        }
+    }
+
+    $composer_json = <<<EOJSON
+{
+    "name": "{$package_folder}{$name}",
+    "description": "{$description}",
+    "keywords": [{$keywords}],
+    "homepage": "{$homepage}",{$license_line}
+    "type": "textpattern-plugin",
+    "authors": [
+        {
+            "name": "{$author}",
+            "homepage": "{$author_uri}"
+        }
+    ],
+    "support": {
+        "issues": "{$issues}",
+        "source": "{$source}"
+    },
+    "require": {
+        "textpattern/lock": "{$req_txp}",
+        "textpattern/installer": "*"
+    }
+}
+EOJSON;
+
+    // Time to create the composer files. First the folder to store them all in
+    $plugin_filename = sanitizeForFile($name);
+    $tmp_folder = rtrim($prefs['tempdir'], DS);
+    $folder = $tmp_folder.'/'.$plugin_filename;
+    $ret = is_readable($folder) || mkdir($folder);
+    $byte_total = 0;
+    $written = array();
+
+    if ($ret) {
+        // Manifest
+        $fn = $folder.'/'.'manifest.json';
+        $bytes = file_put_contents($fn, $manifest);
+        if ($bytes) {
+            $byte_total += $bytes;
+            $written[] = $fn;
+        }
+
+        // Composer file
+        $fn = $folder.'/'.'composer.json';
+        $bytes = file_put_contents($fn, $composer_json);
+        if ($bytes) {
+            $byte_total += $bytes;
+            $written[] = $fn;
+        }
+
+        // PHP code
+        $fn = $folder.'/'.$plugin_filename.'.php';
+        $bytes = file_put_contents($fn, doStrip(str_replace(array('\r\n', '\n'),'
+', $code)));
+        if ($bytes) {
+            $byte_total += $bytes;
+            $written[] = $fn;
+        }
+
+        // Help file
+        if ($help) {
+            $fn = $folder.'/'.$helpfile;
+            $bytes = file_put_contents($fn, doStrip(str_replace('\r\n','
+', $help)));
+            if ($bytes) {
+                $byte_total += $bytes;
+                $written[] = $fn;
+            }
+        }
+
+        // License file
+        if ($license_file !== false) {
+            $fn = $folder.'/'.'LICENSE';
+            $bytes = file_put_contents($fn, $license_file);
+            if ($bytes) {
+                $byte_total += $bytes;
+                $written[] = $fn;
+            }
+        }
+
+        //TODO: textpacks sub-folder
+
+    }
+
+    if (is_array($plugins) && in_array('smd_crunchers', $plugins)) {
+        $crunchers = smd_crunch_capabilities('compress');
+        if (in_array('zip', $crunchers)) {
+            $outfile = $tmp_folder.'/'.$plugin_filename.'.zip';
+            $zip = new smd_crunch_zip_file($outfile);
+            $zip->set_options(array('basedir' => $folder, 'overwrite' => 1, 'inmemory' => 1));
+            $zip->add_files('*');
+            $zip->create_archive();
+            $zip->download_file();
+        }
+    }
+
+    //TODO: return $written to browser, and add each as a link to download individual files
+//dmp($byte_total, $written);
+
 }
 
 // -------------------------------------------------------------
@@ -2257,6 +2621,8 @@ function ied_plugin_save_pane_state()
 //  2) the compressed plugin
 //  3) the PHP template
 //  4) the textpack
+//  5) the VCS source URL
+//  6) the VCS issue URL
 function ied_plugin_get_name($name, $version = '', $lang='')
 {
     $ied_plugin_prefs = ied_pc_get_prefs();
@@ -2265,12 +2631,15 @@ function ied_plugin_get_name($name, $version = '', $lang='')
     $opc = get_pref('ied_plugin_output_sfilec');
     $opp = get_pref('ied_plugin_output_sfilep');
     $opt = get_pref('ied_plugin_output_sfilet');
-
+    $vcss = get_pref('ied_plugin_vcs_source');
+    $vcsi = get_pref('ied_plugin_vcs_issue');
     $out = array(
         ( (empty($op)) ? $ied_plugin_prefs['ied_plugin_output_sfile']['default'] : $op ),
         ( (empty($opc)) ? $ied_plugin_prefs['ied_plugin_output_sfilec']['default'] : $opc ),
         ( (empty($opp)) ? $ied_plugin_prefs['ied_plugin_output_sfilep']['default'] : $opp ),
         ( (empty($opt)) ? $ied_plugin_prefs['ied_plugin_output_sfilet']['default'] : $opt ),
+        ( (empty($vcss)) ? $ied_plugin_prefs['ied_plugin_vcs_source']['default'] : $vcss ),
+        ( (empty($vcsi)) ? $ied_plugin_prefs['ied_plugin_vcs_issue']['default'] : $vcsi ),
     );
 
     $from = array('{name}', '{version}', '{lang}');
@@ -2278,7 +2647,11 @@ function ied_plugin_get_name($name, $version = '', $lang='')
 
     foreach ($out as $fidx => $fname) {
         $fname = str_replace($from, $to, $fname);
-        $out[$fidx] = sanitizeForFile($fname);
+        if ($fidx < 4) {
+            $out[$fidx] = sanitizeForFile($fname);
+        } else {
+            $out[$fidx] = $fname;
+        }
     }
 
     return $out;
@@ -3115,6 +3488,62 @@ function ied_plugin_code_save()
     }
 }
 
+// -------------------------------------------------------------
+function ied_plugin_meta_save() {
+    global $theme, $prefs;
+
+    $ied_plugin_prefs = ied_pc_get_prefs();
+
+    $plug = doSlash(ps('plugin'));
+    $data = ps('data');
+    $msg = '';
+    $set = array();
+    $meta = array();
+    $meta['license'] = (isset($prefs['ied_plugin_license']) ? $prefs['ied_plugin_license'] : $ied_plugin_prefs['ied_plugin_license']['default']);
+
+    foreach ($data as $key => $value) {
+        switch ($key) {
+            case 'description':
+            case 'version':
+            case 'author':
+            case 'author_uri':
+            case 'type':
+            case 'load_order':
+            case 'flags':
+            case 'status':
+                $set[] = $key . "='".doSlash($value)."'";
+                break;
+            case 'newname':
+                $val = doSlash($value);
+                $set[] = "name='".$val."'";
+                $meta['name'] = $val;
+                break;
+            case 'keywords':
+            case 'homepage':
+            case 'require_txp':
+                $meta[$key] = doSlash($value);
+                break;
+            case 'vcs_source':
+                $meta['source'] = doSlash($value);
+                break;
+            case 'vcs_tracker':
+                $meta['issues'] = doSlash($value);
+                break;
+        }
+    }
+
+    ied_plugin_store_meta($plug, $meta);
+    $update = join(',', $set);
+    $ret = safe_update('txp_plugin', $update, "name='$plug'");
+
+    if ($ret) {
+        $msg = $theme->announce_async(gTxt('ied_plugin_meta_saved'));
+    } else {
+        $msg = $theme->announce_async(array(gTxt('ied_plugin_meta_saved_fail'), E_ERROR));
+    }
+    send_xml_response(array('ied_plugin_msg' => $msg));
+}
+
 /**
  * Check the syntax of some PHP code.
  *
@@ -3478,10 +3907,23 @@ function ied_plugin_lang_default($name, $val='')
 }
 
 // ------------------------
+// List of GPL licenses
+function ied_plugin_license_options($name, $val='') {
+    $lics['none'] = gTxt('none');
+    $lics['gpl-1.0'] = gTxt('ied_plugin_gpl_1_0');
+    $lics['gpl-2.0'] = gTxt('ied_plugin_gpl_2_0');
+    $lics['gpl-3.0'] = gTxt('ied_plugin_gpl_3_0');
+    $lics['lgpl-2.0'] = gTxt('ied_plugin_lgpl_2_0');
+    $lics['lgpl-2.1'] = gTxt('ied_plugin_lgpl_2_1');
+    $lics['lgpl-3.0'] = gTxt('ied_plugin_lgpl_3_0');
+    return selectInput($name, $lics, $val, false);
+}
+
+// ------------------------
 // Settings for the plugin
 function ied_pc_get_prefs()
 {
-    global $prefs;
+    global $prefs, $txp_user;
 
     $ied_pc_prefs = array(
         'ied_plugin_editor' => array(
@@ -3623,6 +4065,34 @@ theme_advanced_buttons3 : ""',
             'position' => 190,
             'default'  => $prefs['tempdir'],
             'group'    => 'ied_plugin_prefs',
+        ),
+        'ied_plugin_packagist_user' => array(
+            'html'     => 'text_input',
+            'type'     => PREF_HIDDEN,
+            'position' => 200,
+            'default'  => $txp_user,
+            'group'    => 'ied_plugin_integration',
+        ),
+        'ied_plugin_license' => array(
+            'html'     => 'ied_plugin_license_options',
+            'type'     => PREF_HIDDEN,
+            'position' => 210,
+            'default'  => 'gpl-2.0',
+            'group'    => 'ied_plugin_integration',
+        ),
+        'ied_plugin_vcs_source' => array(
+            'html'     => 'text_input',
+            'type'     => PREF_HIDDEN,
+            'position' => 220,
+            'default'  => 'https://github.com/' . $txp_user . '/{name}',
+            'group'    => 'ied_plugin_integration',
+        ),
+        'ied_plugin_vcs_issue' => array(
+            'html'     => 'text_input',
+            'type'     => PREF_HIDDEN,
+            'position' => 230,
+            'default'  => 'https://github.com/' . $txp_user . '/{name}/issues',
+            'group'    => 'ied_plugin_integration',
         ),
     );
 
@@ -3840,6 +4310,9 @@ function ied_plugin_download_link($atts, $thing = null)
 
 /**
  * Handles downloading plugin content.
+ * ToDo: security to prevent unwanted plugins from being accessed
+ * via modifying the URL params. As a first step, only permit Active
+ * plugin downloads to non-logged-in users.
  */
 function ied_plugin_download()
 {
@@ -4151,6 +4624,7 @@ Plus help from a host of forum contributors too numerous to mention. You know wh
 
 h2(#changelog). Changelog
 
+* NN YYY ZZZZ | 1.XX | Added Composer/Packagist support; added dedicated meta save button
 * 25 Jul 2014 | 1.06 | Added @escape@ attribute to ied_plugin_download_link tag
 * 21 Oct 2013 | 1.05 | More sensible default for lang export from ied_plugin_download_link tag
 * 15 Oct 2013 | 1.04 | Fixed bug preventing help being packaged in downloaded plugin from public side
