@@ -386,7 +386,6 @@ function ied_plugin_composer($evt, $stp)
         'ied_plugin_install'          => true,
         'ied_plugin_lang_set'         => true,
         'ied_plugin_table'            => false,
-
         'ied_plugin_multi_edit'       => true,
         'ied_plugin_prefs'            => false,
         'ied_plugin_restore'          => true,
@@ -965,7 +964,6 @@ function ied_plugin_edit($message='', $newfile='')
         $status = ($fileext=='php')? 1: 0;
     }
 
-
     $ifel = get_pref('ied_plugin_interface_elems');
     $distblock = (strpos($ifel, 'distribution') !== false);
     $styleblock = (strpos($ifel, 'style') !== false);
@@ -1002,7 +1000,6 @@ function ied_plugin_edit($message='', $newfile='')
     $sphplink = ied_plugin_anchor($ied_pc_event, 'ied_plugin_save_as_php_file', gTxt('ied_plugin_save_as', array('{name}' => $fnames[2])), $namedLink);
     $stxtlink = ied_plugin_anchor($ied_pc_event, 'ied_plugin_save_as_textpack', gTxt('ied_plugin_export_textpack'), $namedLink);
     $vhelplinkfull = ($help) ? '[ ' .ied_plugin_anchor($ied_pc_event, 'ied_plugin_help_viewer', gTxt('ied_plugin_docs'), $namedLink) . ' ]' : '';
-
 
     $msgpop = '<div id="ied_plugin_msgpop"><input type="button" class="publish" value="'.gTxt('ok').'" onclick="ied_plugin_toggle_msgpop(\'0\');" /><h2>'.gTxt('ied_plugin_msgpop_lbl').'</h2><span class="ied_plugin_msgpop_content"></span></div>';
 
@@ -1092,7 +1089,6 @@ function ied_plugin_edit($message='', $newfile='')
         n. form(
             '<div id="ied_plugin_sub">'. ($sub).'</div>'
             .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_meta_visible') ? ' expanded' : '').'"><a href="#ied_plugin_meta">' . gTxt('ied_plugin_meta_legend') . '</a></h3><div id="ied_plugin_meta" class="toggle" style="display:'.(get_pref('pane_ied_plugin_meta_visible') ? 'block' : 'none').'">'
-
             .n. '<p><label>' . gTxt('name') . '</label>' . sp . $newname . sp. '<label>' . gTxt('version') . '</label>' . sp . $version_widget . $plugstatus . ( ($filename) ? tag(sp.sp.'('.$filename.')','span',' style="color:gray;"').hInput('filename',$filename) : '' ) . '</p>'
             .n. '<p><label>' . gTxt('description') . '</label>' . sp . $description_widget . '</p>'
             .n. '<p><label>' . gTxt('author') . '</label>' . sp . $author_widget . sp. '<label>' . gTxt('website') . '</label>' .sp. $author_uri_widget. '</p>'
@@ -2256,7 +2252,7 @@ function ied_plugin_save_pane_state()
 }
 
 // -------------------------------------------------------------
-// Reurns an array of (file)names;
+// Returns an array of (file)names;
 //  1) the standard plugin
 //  2) the compressed plugin
 //  3) the PHP template
