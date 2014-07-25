@@ -4624,7 +4624,8 @@ Plus help from a host of forum contributors too numerous to mention. You know wh
 
 h2(#changelog). Changelog
 
-* NN YYY ZZZZ | 1.XX | Added Composer/Packagist support; added dedicated meta save button
+* XX YYY ZZZZ | A.BC | Added Composer/Packagist support; added dedicated meta save button
+* XX YYY ZZZZ | 1.07 | Added Textpack string counter; permitted constants in plugin template declarations; fixed bogus javascript code output; fixed resize hanlder CSS.
 * 25 Jul 2014 | 1.06 | Added @escape@ attribute to ied_plugin_download_link tag
 * 21 Oct 2013 | 1.05 | More sensible default for lang export from ied_plugin_download_link tag
 * 15 Oct 2013 | 1.04 | Fixed bug preventing help being packaged in downloaded plugin from public side
