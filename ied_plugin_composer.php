@@ -1428,7 +1428,7 @@ jQuery(function () {
 
     // Save textpack string to database
     function ied_plugin_tp_save(event)
-	{
+    {
         var elem = jQuery(this);
         var isSel = elem.is('select');
         var tp_lbl = elem.nextAll('label').text();
@@ -2338,19 +2338,27 @@ function ied_plugin_read_file($filepath)
             $parts = explode(" = ", $content[$idx]);
             $parts[0] = str_replace("'", "", $parts[0]); // Make the match easier!
             $semicolon = strpos($parts[1], ';');
-            $parts[1] = substr($parts[1], 0, $semicolon); // Ditto
+
+            if ($semicolon !== false) {
+                $parts[1] = substr($parts[1], 0, $semicolon); // Ditto
+            }
+
             preg_match("/plugin\[(.*)\]/", $parts[0], $var); // Extract just the variable name
+
             if (is_numeric($parts[1])) {
                 $parts[1] = "'".$parts[1]."'";
             }
-            preg_match("/.*'(.*)'.*/", $parts[1], $val); // Remove anything outside the quotes (e.g. $revision)
 
-            if (empty($val)) {
-                // Try unquoted - may be a constant
-                preg_match("/(.*)/", $parts[1], $val);
-                if (strtoupper($val[1]) == $val[1]) {
-                    // It's a constant so get its value
-                    $val[1] = constant($val[1]);
+            if (strpos($parts[1], '<<<') === false) {
+                preg_match("/.*'(.*)'.*/", $parts[1], $val); // Remove anything outside the quotes (e.g. $revision)
+
+                if (empty($val)) {
+                    // Try unquoted - may be a constant
+                    preg_match("/(.*)/", $parts[1], $val);
+                    if (strtoupper($val[1]) == $val[1]) {
+                        // It's a constant so get its value
+                        $val[1] = constant($val[1]);
+                    }
                 }
             }
 
@@ -2359,6 +2367,7 @@ function ied_plugin_read_file($filepath)
                 $val[1] = $revparts[count($revparts)-1];
                 $val[1] = (empty($val[1])) ? '' : '.' .$val[1];
             }
+
             if ($var[1] === 'flags' && !isset($val[1])) {
                 // Unquoted value; possibly constants
                 $val[1] = 0;
@@ -2367,6 +2376,7 @@ function ied_plugin_read_file($filepath)
                     $val[1] |= (defined($constant)) ? constant($constant) : 0;
                 }
             }
+
             if ($var[1] === 'textpack') {
                 $in_textpack = true;
                 continue;
