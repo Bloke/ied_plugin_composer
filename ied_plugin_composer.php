@@ -1637,33 +1637,31 @@ function ied_plugin_save()
             $msgType = '';
         } else {
             $dir = $prefs['plugin_cache_dir'].DS;
-            if (file_exists($dir.$filename)) {
-                $filecontent = file($dir.$filename);
+            if (empty($prefs['plugin_cache_dir'])) {
+                $filecontent = '';
+                $msg2 = gTxt('ied_plugin_cache_not_set');
             } else {
-                if (empty($prefs['plugin_cache_dir'])) {
-                    $filecontent = '';
-                    $msg2 = gTxt('ied_plugin_cache_not_set');
-                } else {
-                    $oporder = (isset($prefs['ied_plugin_output_order']) && is_numeric($prefs['ied_plugin_output_order'])) ? $prefs['ied_plugin_output_order'] : 0;
-                    $helpchunk = ied_plugin_build_template('help', array($help, ' ')); // Use a space to force a CSS hunk in the file
-                    $codechunk = ied_plugin_build_template('code', $code);
-                    $filecontent = ied_plugin_build_template("preamble")
-                        .ied_plugin_build_template("name", $newname)
-                        .ied_plugin_build_template("html_help")
-                        .ied_plugin_build_template("version", $version)
-                        .ied_plugin_build_template("author", $author)
-                        .ied_plugin_build_template("author_uri", $author_uri)
-                        .ied_plugin_build_template("description", $description)
-                        .ied_plugin_build_template("load_order", $load_order)
-                        .ied_plugin_build_template("type", $type)
-                        .ied_plugin_build_template("flags", $flags)
-                        .ied_plugin_build_template("include")
-                        .(($oporder == 0) ? $codechunk : $helpchunk)
-                        .(($oporder == 1) ? $codechunk : $helpchunk)
-                        .ied_plugin_build_template("postamble");
-                    $msg1 = gTxt('ied_plugin_edit_new');
-                    $msgType = '';
-                }
+                $oporder = (isset($prefs['ied_plugin_output_order']) && is_numeric($prefs['ied_plugin_output_order'])) ? $prefs['ied_plugin_output_order'] : 0;
+                $textpack = ied_plugin_textpack_build($newname);
+                $helpchunk = ied_plugin_build_template('help', array($help, ' ')); // Use a space to force a CSS hunk in the file
+                $codechunk = ied_plugin_build_template('code', $code);
+                $filecontent = ied_plugin_build_template("preamble")
+                    .ied_plugin_build_template("name", $newname)
+                    .ied_plugin_build_template("html_help")
+                    .ied_plugin_build_template("version", $version)
+                    .ied_plugin_build_template("author", $author)
+                    .ied_plugin_build_template("author_uri", $author_uri)
+                    .ied_plugin_build_template("description", $description)
+                    .ied_plugin_build_template("load_order", $load_order)
+                    .ied_plugin_build_template("type", $type)
+                    .ied_plugin_build_template("flags", $flags)
+                    .ied_plugin_build_template("textpack", $textpack)
+                    .ied_plugin_build_template("include")
+                    .(($oporder == 0) ? $codechunk : $helpchunk)
+                    .(($oporder == 1) ? $codechunk : $helpchunk)
+                    .ied_plugin_build_template("postamble");
+                $msg1 = gTxt('ied_plugin_edit_new');
+                $msgType = '';
             }
 
             $filecontent = ied_plugin_make_array($filecontent);
@@ -1851,10 +1849,11 @@ function ied_plugin_save_as_textpack()
     global $prefs;
 
     if (gps('name')) {
-        $name = gps('name');
+        $name = $base_name = gps('name');
         $version = safe_field('version', "txp_plugin", "name='".doSlash($name)."'");
     } elseif (gps('filename')) {
         $name = gps('filename');
+        $base_name = str_replace('.php', '', $name);
         $plugin=ied_plugin_read_file($prefs['plugin_cache_dir'].DS.gps('filename'));
         $version = $plugin['version'];
     }
@@ -1881,7 +1880,7 @@ function ied_plugin_save_as_textpack()
             $langstr = join('+', array_unique($country_codes));
         }
     }
-    $textpack = ied_plugin_textpack_build($name, $force);
+    $textpack = ied_plugin_textpack_build($base_name, $force);
     $fnames = ied_plugin_get_name($name, $version, $langstr);
 
     header('Content-type: text/html; charset=UTF-8');
