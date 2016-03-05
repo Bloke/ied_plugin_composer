@@ -224,6 +224,9 @@ ied_plugin_load => Charger
 ied_plugin_load_order => Ordre de chargement
 ied_plugin_load_order_help => (1=premier > 5=normal > 9=dernier)
 ied_plugin_meta_legend => Meta information
+ied_plugin_meta_save => 
+ied_plugin_meta_saved => 
+ied_plugin_meta_saved_fail => 
 ied_plugin_msgpop_lbl => Bloc phpdoc
 ied_plugin_name_first => Veuillez nommer le plugin avant de pouvoir le créer
 ied_plugin_output_order => Orde d'exportation du source PHP
@@ -684,6 +687,7 @@ input[type="submit"] { margin:0.3em 0.7em; }
             'install'          => true,
             'lang_set'         => true,
             'table'            => false,
+            'meta_save'        => true,
             'multi_edit'       => true,
             'prefs'            => false,
             'restore'          => true,
@@ -958,22 +962,22 @@ input[type="submit"] { margin:0.3em 0.7em; }
 
         echo '</div>'.
             n. script_js( <<<EOJS
-                $(document).ready(function () {
-                    $('#ied_plugin_db_form').txpMultiEditForm({
-                        'checkbox' : 'input[name="selected[]"][type=checkbox]'
-                    });
-                    $('#ied_plugin_cache_form').txpMultiEditForm({
-                        'checkbox' : 'input[name="selected-cache[]"][type=checkbox]'
-                    });
-                });
+$(document).ready(function () {
+    $('#ied_plugin_db_form').txpMultiEditForm({
+        'checkbox' : 'input[name="selected[]"][type=checkbox]'
+    });
+    $('#ied_plugin_cache_form').txpMultiEditForm({
+        'checkbox' : 'input[name="selected-cache[]"][type=checkbox]'
+    });
+});
 EOJS
                     );
 
-        // Show/hide "Options" link by setting the appropriate class on the plugin's TR
+        // Show/hide "Options" link by setting the appropriate class on the plugin's &lt;tr&gt;
         echo script_js(<<<EOJS
-    textpattern.Relay.register('txpAsyncHref.success', function (event, data) {
-        jQuery(data.this).closest('tr').find('a.plugin_prefs').toggleClass('empty');
-    });
+textpattern.Relay.register('txpAsyncHref.success', function (event, data) {
+    jQuery(data.this).closest('tr').find('a.plugin_prefs').toggleClass('empty');
+});
 EOJS
         );
     }
@@ -1348,6 +1352,7 @@ EOJS
 
         $sub = graf(fInput('submit', '', gTxt('save'), 'publish', '', '', '', '', 'ied_editSave'), array('class' => 'txp-save'));
         $codesub = (!$editfile) ? '<a class="navlink" name="ied_plugin_code_save" id="ied_plugin_code_save">' . gTxt('ied_plugin_code_save') . '</a>' : '';
+        $metasub = (!$editfile) ? '<a class="navlink" name="ied_plugin_meta_save" id="ied_plugin_meta_save">' . gTxt('ied_plugin_meta_save') . '</a>' : '';
 
         // Language info. ied_visible_langs is the user's choice of which ones they want to see available.
         // ied_available_langs is the list of actual, currently-installed langs.
@@ -1460,6 +1465,7 @@ EOJS
                 .n. '<div class="txp-layout-4col-cell-2-3-4" id="ied_edit_content" role="region">'
                 .n. '<section class="txp-prefs-group" id="options_group_meta" aria-labelledby="options_group_meta-label">'
                 .n. hed(gTxt('ied_plugin_meta_legend'), 2, array('id' => 'options_group_meta-label'))
+                .n. '<span class="ied_plugin_edit_toolbar">' . $metasub . '</span>'
                 .n. '<div class="txp-form-field">'
                 .n. '<div class="txp-form-field-label"><label for="newname">' . gTxt('name') . '</label></div>'
                 .n. '<div class="txp-form-field-value">' . $newname . '</div>'
@@ -1550,454 +1556,498 @@ EOJS
                 .n. hInput('name',$name)
             , '', '', 'post', 'ied-edit-form').
             script_js(<<<EOJS
-    var selectedTab = '{$tabActive}';
-    var iedPluginGroup = $('.ied-edit-form');
-    var iedPluginTabs = iedPluginGroup.find('.switcher-list li');
+var selectedTab = '{$tabActive}';
+var iedPluginGroup = $('.ied-edit-form');
+var iedPluginTabs = iedPluginGroup.find('.switcher-list li');
 
-    iedPluginGroup.tabs({active: selectedTab}).removeClass('ui-widget ui-widget-content ui-corner-all').addClass('ui-tabs-vertical');
-    iedPluginGroup.find('.switcher-list').removeClass('ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all');
-    iedPluginTabs.removeClass('ui-state-default ui-corner-top');
-    iedPluginGroup.find('.txp-prefs-group').removeClass('ui-widget-content ui-corner-bottom');
+iedPluginGroup.tabs({active: selectedTab}).removeClass('ui-widget ui-widget-content ui-corner-all').addClass('ui-tabs-vertical');
+iedPluginGroup.find('.switcher-list').removeClass('ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all');
+iedPluginTabs.removeClass('ui-state-default ui-corner-top');
+iedPluginGroup.find('.txp-prefs-group').removeClass('ui-widget-content ui-corner-bottom');
 
-    iedPluginTabs.on('click', 'a', function(ev) {
-        var me = $(this);
-        sendAsyncEvent({
-                event   : 'pane',
-                step    : 'tabVisible',
-                pane    : me.data('txp-pane'),
-                origin  : textpattern.event,
-                token   : me.data('txp-token')
-            });
+iedPluginTabs.on('click', 'a', function(ev) {
+    var me = $(this);
+    sendAsyncEvent({
+            event   : 'pane',
+            step    : 'tabVisible',
+            pane    : me.data('txp-pane'),
+            origin  : textpattern.event,
+            token   : me.data('txp-token')
+        });
+});
+
+var ied_plugin_tp_total = 0;
+
+jQuery.fn.selectRange = function(start, end) {
+    return this.each(function() {
+        if (this.setSelectionRange) {
+            this.focus();
+            this.setSelectionRange(start, end);
+        } else if (this.createTextRange) {
+            var range = this.createTextRange();
+            range.collapse(true);
+            range.moveEnd('character', end);
+            range.moveStart('character', start);
+            range.select();
+        }
+    });
+};
+
+Array.prototype.unique = function() {
+    var r = new Array();
+    o:for (var i = 0, n = this.length; i < n; i++) {
+        for (var x = 0, y = r.length; x < y; x++) {
+            if (r[x]==this[i]) {
+                continue o;
+            }
+        }
+        r[r.length] = this[i];
+    }
+
+    return r;
+};
+
+function ied_goToLine()
+{
+    var line = parseInt(jQuery('#ied_plugin_jumpToLine').val());
+    var ied_ed = jQuery('#plugin_editor');
+    var ied_edd = document.getElementById('plugin_editor'); // Dunno how to convert a jQuery obj back to DOM
+    var lines = ied_ed.val().split('\\n');
+    var numchars = 0;
+    var count = 0;
+    var findstr = '';
+    jQuery.each(lines, function () {
+        count++;
+        if (count >= line) {
+            findstr = this;
+
+
+            return false;
+        }
+        numchars += (this.length)+2; // Don't ask. +2 is something to do with line endings I think
     });
 
-    var ied_plugin_tp_total = 0;
+    // Find the line containing the string we found. Start counting from the line before.
+    // Those pesky line endings come into play again so we need to subtract the number
+    // of lines found from the start character position *shrug*
+    start = ied_ed.val().indexOf(findstr, numchars-count);
+    start = (findstr == '') ? start+1 : start;
+    end = start+findstr.length;
+    ied_ed.selectRange(end-1, end);
 
-    jQuery.fn.selectRange = function(start, end) {
-        return this.each(function() {
-            if (this.setSelectionRange) {
-                this.focus();
-                this.setSelectionRange(start, end);
-            } else if (this.createTextRange) {
-                var range = this.createTextRange();
-                range.collapse(true);
-                range.moveEnd('character', end);
-                range.moveStart('character', start);
-                range.select();
-            }
-        });
-    };
-
-    Array.prototype.unique = function() {
-        var r = new Array();
-        o:for (var i = 0, n = this.length; i < n; i++) {
-            for (var x = 0, y = r.length; x < y; x++) {
-                if (r[x]==this[i]) {
-                    continue o;
-                }
-            }
-            r[r.length] = this[i];
-        }
-
-        return r;
-    };
-
-    function ied_goToLine()
-    {
-        var line = parseInt(jQuery('#ied_plugin_jumpToLine').val());
-        var ied_ed = jQuery('#plugin_editor');
-        var ied_edd = document.getElementById('plugin_editor'); // Dunno how to convert a jQuery obj back to DOM
-        var lines = ied_ed.val().split('\\n');
-        var numchars = 0;
-        var count = 0;
-        var findstr = '';
-        jQuery.each(lines, function () {
-            count++;
-            if (count >= line) {
-                findstr = this;
-
-
-                return false;
-            }
-            numchars += (this.length)+2; // Don't ask. +2 is something to do with line endings I think
-        });
-
-        // Find the line containing the string we found. Start counting from the line before.
-        // Those pesky line endings come into play again so we need to subtract the number
-        // of lines found from the start character position *shrug*
-        start = ied_ed.val().indexOf(findstr, numchars-count);
-        start = (findstr == '') ? start+1 : start;
-        end = start+findstr.length;
-        ied_ed.selectRange(end-1, end);
-
-        if (document.createEvent) {
-            var ied_theCode = ied_ed.val().charCodeAt(end-1);
-            if (window.KeyEvent) {
-                var ev = document.createEvent('KeyEvents');
-                ev.initKeyEvent('keypress', false, true, window, false, false, false, false, 0, ied_theCode);
-            } else {
-                var ev = document.createEvent('UIEvents');
-                ev.initUIEvent('keypress', false, true, window, 0);
-                ev.keyCode = ied_theCode;
-            }
-            ied_edd.dispatchEvent(ev); // cause scroll to cursor by replacing last char with itself
-        }
-        ied_ed.selectRange(start, end);
-
-        return false;
-    }
-    function ied_plugin_toggle_msgpop(state)
-    {
-        var obj = jQuery("#ied_plugin_msgpop");
-        if (state != undefined) {
-            if (state == 1) {
-                obj.show('normal');
-            } else {
-                obj.hide('normal');
-            }
+    if (document.createEvent) {
+        var ied_theCode = ied_ed.val().charCodeAt(end-1);
+        if (window.KeyEvent) {
+            var ev = document.createEvent('KeyEvents');
+            ev.initKeyEvent('keypress', false, true, window, false, false, false, false, 0, ied_theCode);
         } else {
-            obj.toggle('normal');
+            var ev = document.createEvent('UIEvents');
+            ev.initUIEvent('keypress', false, true, window, 0);
+            ev.keyCode = ied_theCode;
         }
+        ied_edd.dispatchEvent(ev); // cause scroll to cursor by replacing last char with itself
     }
-    function ied_plugin_rtrim(str, chars)
-    {
-        chars = chars || "\s";
+    ied_ed.selectRange(start, end);
 
-        return str.replace(new RegExp("[" + chars + "]+$", "g"), "");
+    return false;
+}
+function ied_plugin_toggle_msgpop(state)
+{
+    var obj = jQuery("#ied_plugin_msgpop");
+    if (state != undefined) {
+        if (state == 1) {
+            obj.show('normal');
+        } else {
+            obj.hide('normal');
+        }
+    } else {
+        obj.toggle('normal');
     }
-    function ied_plugin_update_tp_count()
-    {
-        var tp_count = tp_warns = tp_has_content = 0;
+}
+function ied_plugin_rtrim(str, chars)
+{
+    chars = chars || "\s";
 
-        jQuery('#options_group_pack ul li').each(function() {
-            var self = jQuery(this);
-            tp_count++;
-            if (self.find('input').val() !== '') {
-                tp_has_content++;
-            }
-            if (self.find('label').hasClass('warning')) {
-                tp_warns++;
-            }
-        });
-        jQuery('#ied_plugin_tp_count').empty().append('(' +tp_count+ ' | ' +tp_has_content+ ' | ' +tp_warns+ ')');
-        jQuery('#ied_plugin_tp_lang option').find(':selected').data('string-count', tp_has_content);
+    return str.replace(new RegExp("[" + chars + "]+$", "g"), "");
+}
+function ied_plugin_update_tp_count()
+{
+    var tp_count = tp_warns = tp_has_content = 0;
 
-        // Update the global var for use when loading strings
-        ied_plugin_tp_total = tp_count;
-    }
+    jQuery('#options_group_pack ul li').each(function() {
+        var self = jQuery(this);
+        tp_count++;
+        if (self.find('input').val() !== '') {
+            tp_has_content++;
+        }
+        if (self.find('label').hasClass('warning')) {
+            tp_warns++;
+        }
+    });
+    jQuery('#ied_plugin_tp_count').empty().append('(' +tp_count+ ' | ' +tp_has_content+ ' | ' +tp_warns+ ')');
+    jQuery('#ied_plugin_tp_lang option').find(':selected').data('string-count', tp_has_content);
 
-    jQuery(function () {
-        curh = getCookie('ied_plugin_edheight');
-        curh = (curh == null) ? '480' : curh;
-        jQuery('textarea[maxlength]').keyup(function () {
-            var max = parseInt(jQuery(this).attr('maxlength'));
-            if (jQuery(this).val().length > max) {
-                jQuery(this).val(jQuery(this).val().substr(0, jQuery(this).attr('maxlength')));
-            }
-            jQuery(this).parent().find('.ied_plugin_charsRemain').html('Chars remaining: '+ (max - jQuery(this).val().length));
-        });
-        jQuery('textarea[maxlength]').keyup();
-        jQuery('#ied_plugin_jumpToLine').keydown(function (e) {
-            var code = (e.keyCode ? e.keyCode : e.which);
-            if (code == 13) {
-                e.preventDefault();
-                e.stopPropagation();
-                ied_goToLine();
+    // Update the global var for use when loading strings
+    ied_plugin_tp_total = tp_count;
+}
+
+jQuery(function () {
+    curh = getCookie('ied_plugin_edheight');
+    curh = (curh == null) ? '480' : curh;
+    jQuery('textarea[maxlength]').keyup(function () {
+        var max = parseInt(jQuery(this).attr('maxlength'));
+        if (jQuery(this).val().length > max) {
+            jQuery(this).val(jQuery(this).val().substr(0, jQuery(this).attr('maxlength')));
+        }
+        jQuery(this).parent().find('.ied_plugin_charsRemain').html('Chars remaining: '+ (max - jQuery(this).val().length));
+    });
+    jQuery('textarea[maxlength]').keyup();
+    jQuery('#ied_plugin_jumpToLine').keydown(function (e) {
+        var code = (e.keyCode ? e.keyCode : e.which);
+        if (code == 13) {
+            e.preventDefault();
+            e.stopPropagation();
+            ied_goToLine();
 
 
-                return false;
-            }
-        });
+            return false;
+        }
+    });
 
-        // Store the prefix
-        jQuery('#ied_plugin_tp_prefix').blur(function () {
-            var pfx = jQuery(this).val();
-            sendAsyncEvent(
-            {
-                event: textpattern.event,
-                step: 'set_tp_prefix',
-                plugin: '{$name}',
-                prefix: pfx
-            });
-        });
-
-        // Find all occurrences of gTxt('something')
-        jQuery('#plugin_editor, #ied_plugin_tp_prefix').blur(function () {
-            var ied_tp_pfx = jQuery('#ied_plugin_tp_prefix').val();
-            if (ied_tp_pfx != '') {
-                var ied_gtxt_re = /gTxt\([\'\"]([a-zA-Z0-9_]*?)[\"\'][,\)]/gi;
-                var ied_tp_ta = jQuery('#plugin_editor').val().replace(/\s*/g,''); // Strip spaces to make lookups easier
-                var ied_tp_items = ied_tp_ta.match(ied_gtxt_re);
-
-                // if JS RegExp captured parenthical expressions in global searches or it was easy to inject variables
-                // into new RegExp() calls, this loop could be avoided
-                var ied_tp_used = [];
-                for (var idx = 0; idx < ied_tp_items.length; idx++) {
-                    var pos = ied_tp_items[idx].lastIndexOf("'");
-                    pos = (pos == -1) ? ied_tp_items[idx].lastIndexOf('"') : pos;
-                    tpstr = ied_tp_items[idx].substr(6,pos-6);
-                    if (tpstr.indexOf(ied_tp_pfx) == 0) {
-                        ied_tp_used[ied_tp_used.length] = tpstr;
-                    }
-                }
-
-                ied_tp_used = ied_tp_used.unique();
-
-                // List of all current textpack strings in use (as of last Save operation)
-                var ied_tp_curr = [];
-                jQuery('#options_group_pack ul label').each(function () {
-                    ied_tp_curr[ied_tp_curr.length] = jQuery(this).text();
-                });
-
-                // Iterate over current array and check if each name is in the used textpack item list.
-                // If it is, remove it from the final list.
-                for (var idx = 0; idx < ied_tp_curr.length; idx++) {
-                    if ((pos = jQuery.inArray(ied_tp_curr[idx], ied_tp_used)) > -1) {
-                        ied_tp_used.splice(pos, 1);
-                        jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', false).next(".ied_plugin_xbtn").remove();
-                    } else {
-                        setclass = 1;
-                        jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', true).next(".ied_plugin_xbtn").remove().end().after('<a href="#" class="ied_plugin_xbtn">[x]</a>');
-                    }
-                }
-                // For each remaining item that has been used, add an input box
-                // TODO: i18n the select options
-                for (var idx = 0; idx < ied_tp_used.length; idx++) {
-                    jQuery('#options_group_pack ul').prepend('<li><input type="text" name="textpack_'+ied_tp_used[idx]+'" value="" /> <select name="ied_plugin_tp_event"><option value="admin">Admin</option><option value="public">Public</option><option value="common">Both</option></select> <label>'+ied_tp_used[idx]+'</label></li>');
-                }
-                ied_plugin_update_tp_count();
-            }
-        }).blur();
-
-        // Handle adding new strings manually
-        jQuery('#ied_plugin_add_string').click(function (ev) {
-            jQuery('#options_group_pack ul').before('<div id="ied_plugin_new_container"><label>'+jQuery('#ied_plugin_tp_prefix').val()+'_<input type="text" name="ied_plugin_tp_newname" id="ied_plugin_tp_newname" value="" /></label></div>');
-            jQuery('#ied_plugin_tp_newname').focus();
-            ev.preventDefault();
-        });
-        jQuery(document).on('blur', '#ied_plugin_tp_newname', function () {
-            var newname = ied_plugin_rtrim(jQuery('#ied_plugin_tp_prefix').val()+'_'+jQuery('#ied_plugin_tp_newname').val(), '_');
-            var newok = true;
-            jQuery('#options_group_pack ul li label').each(function () {
-                if (jQuery(this).text() == newname) {
-                    jQuery('#ied_plugin_tp_newname').css('color', '#E00');
-                    newok = false;
-                }
-            });
-            // TODO: i18n select option text
-            if (newok) {
-                jQuery('#options_group_pack ul').prepend('<li><input type="text" name="textpack_'+newname+'" value="" /> <select name="ied_plugin_tp_event"><option value="admin">Admin</option><option value="public">Public</option><option value="common">Both</option></select> <label>'+newname+'</label></li>');
-                jQuery('#ied_plugin_new_container').remove();
-                jQuery('input[name="textpack_'+newname+'"]').focus();
-            }
-            ied_plugin_update_tp_count();
-        });
-
-        // Initialise the generic AJAX error handler
-        jQuery('.ied_editForm').ajaxError(function (event, request, settings) {
-            var xhr = jQuery(request.responseText);
-
-            // phpdoc generation barfed
-            if (settings.data.indexOf('step=ied_plugin_generate_phpdoc') > -1) {
-                var msgContent = jQuery("#ied_plugin_msgpop .ied_plugin_msgpop_content");
-                status = xhr.find('http-status').attr('value')
-                if (status == '200 OK') {
-                    msgContent.append(xhr.find('ied_plugin_phpdoc').attr('value'));
-                } else if (status == '501 Not Implemented') {
-                    msgContent.append(xhr.find('error_msg').attr('value'));
-                }
-                ied_plugin_toggle_msgpop('1');
-            }
-
-            // code save barfed
-            if (settings.data.indexOf('step=ied_plugin_code_save') > -1) {
-                var msg = xhr.find('ied_plugin_msg').attr('value');
-                var line = xhr.find('ied_plugin_err_line').attr('value');
-                jQuery('#ied_plugin_jumpToLine').val(line);
-                ied_goToLine();
-                var codeobj = jQuery("#plugin_editor");
-                codeobj.css({'opacity': '.75'}); // Reduced opacity as a visual cue that something's wrong
-                eval(msg); // bleurgh!
-            }
-        });
-
-        // Handle 'x' button
-        jQuery(document).on('click', '.ied_plugin_xbtn', function (event) {
-            var elem = jQuery(this).prev('label');
-            var tp_lbl = elem.text();
-
-            sendAsyncEvent(
-            {
-                event: textpattern.event,
-                step: 'textpack_del',
-                ied_tp_lbl: tp_lbl
-            });
-
-            elem.parent().remove();
-            event.preventDefault();
-            ied_plugin_update_tp_count();
-        });
-
-        // Save textpack string to database
-        function ied_plugin_tp_save(event)
+    // Store the prefix
+    jQuery('#ied_plugin_tp_prefix').blur(function () {
+        var pfx = jQuery(this).val();
+        sendAsyncEvent(
         {
-            var elem = jQuery(this);
-            var isSel = elem.is('select');
-            var tp_lbl = elem.nextAll('label').text();
-            var tp_str = (isSel) ? elem.prevAll('input').val() : elem.val();
-            var tp_ev = (isSel) ? elem.val() : elem.nextAll('select').val();
-            var tp_evt = (tp_ev=='public' || tp_ev=='common') ? tp_ev : jQuery('#ied_plugin_tp_prefix').val();
-            var tp_lng = jQuery('#ied_plugin_tp_lang').val();
+            event: textpattern.event,
+            step: 'set_tp_prefix',
+            plugin: '{$name}',
+            prefix: pfx
+        });
+    });
 
+    // Find all occurrences of gTxt('something')
+    jQuery('#plugin_editor, #ied_plugin_tp_prefix').blur(function () {
+        var ied_tp_pfx = jQuery('#ied_plugin_tp_prefix').val();
+        if (ied_tp_pfx != '') {
+            var ied_gtxt_re = /gTxt\([\'\"]([a-zA-Z0-9_]*?)[\"\'][,\)]/gi;
+            var ied_tp_ta = jQuery('#plugin_editor').val().replace(/\s*/g,''); // Strip spaces to make lookups easier
+            var ied_tp_items = ied_tp_ta.match(ied_gtxt_re);
+
+            // if JS RegExp captured parenthical expressions in global searches or it was easy to inject variables
+            // into new RegExp() calls, this loop could be avoided
+            var ied_tp_used = [];
+            for (var idx = 0; idx < ied_tp_items.length; idx++) {
+                var pos = ied_tp_items[idx].lastIndexOf("'");
+                pos = (pos == -1) ? ied_tp_items[idx].lastIndexOf('"') : pos;
+                tpstr = ied_tp_items[idx].substr(6,pos-6);
+                if (tpstr.indexOf(ied_tp_pfx) == 0) {
+                    ied_tp_used[ied_tp_used.length] = tpstr;
+                }
+            }
+
+            ied_tp_used = ied_tp_used.unique();
+
+            // List of all current textpack strings in use (as of last Save operation)
+            var ied_tp_curr = [];
+            jQuery('#options_group_pack ul label').each(function () {
+                ied_tp_curr[ied_tp_curr.length] = jQuery(this).text();
+            });
+
+            // Iterate over current array and check if each name is in the used textpack item list.
+            // If it is, remove it from the final list.
+            for (var idx = 0; idx < ied_tp_curr.length; idx++) {
+                if ((pos = jQuery.inArray(ied_tp_curr[idx], ied_tp_used)) > -1) {
+                    ied_tp_used.splice(pos, 1);
+                    jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', false).next(".ied_plugin_xbtn").remove();
+                } else {
+                    setclass = 1;
+                    jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', true).next(".ied_plugin_xbtn").remove().end().after('<a href="#" class="ied_plugin_xbtn">[x]</a>');
+                }
+            }
+            // For each remaining item that has been used, add an input box
+            // TODO: i18n the select options
+            for (var idx = 0; idx < ied_tp_used.length; idx++) {
+                jQuery('#options_group_pack ul').prepend('<li><input type="text" name="textpack_'+ied_tp_used[idx]+'" value="" /> <select name="ied_plugin_tp_event"><option value="admin">Admin</option><option value="public">Public</option><option value="common">Both</option></select> <label>'+ied_tp_used[idx]+'</label></li>');
+            }
+            ied_plugin_update_tp_count();
+        }
+    }).blur();
+
+    // Handle adding new strings manually
+    jQuery('#ied_plugin_add_string').click(function (ev) {
+        jQuery('#options_group_pack ul').before('<div id="ied_plugin_new_container"><label>'+jQuery('#ied_plugin_tp_prefix').val()+'_<input type="text" name="ied_plugin_tp_newname" id="ied_plugin_tp_newname" value="" /></label></div>');
+        jQuery('#ied_plugin_tp_newname').focus();
+        ev.preventDefault();
+    });
+    jQuery(document).on('blur', '#ied_plugin_tp_newname', function () {
+        var newname = ied_plugin_rtrim(jQuery('#ied_plugin_tp_prefix').val()+'_'+jQuery('#ied_plugin_tp_newname').val(), '_');
+        var newok = true;
+        jQuery('#options_group_pack ul li label').each(function () {
+            if (jQuery(this).text() == newname) {
+                jQuery('#ied_plugin_tp_newname').css('color', '#E00');
+                newok = false;
+            }
+        });
+        // TODO: i18n select option text
+        if (newok) {
+            jQuery('#options_group_pack ul').prepend('<li><input type="text" name="textpack_'+newname+'" value="" /> <select name="ied_plugin_tp_event"><option value="admin">Admin</option><option value="public">Public</option><option value="common">Both</option></select> <label>'+newname+'</label></li>');
+            jQuery('#ied_plugin_new_container').remove();
+            jQuery('input[name="textpack_'+newname+'"]').focus();
+        }
+        ied_plugin_update_tp_count();
+    });
+
+    // Initialise the generic AJAX error handler
+    jQuery('.ied_editForm').ajaxError(function (event, request, settings) {
+        var xhr = jQuery(request.responseText);
+
+        // phpdoc generation barfed
+        if (settings.data.indexOf('step=ied_plugin_generate_phpdoc') > -1) {
+            var msgContent = jQuery("#ied_plugin_msgpop .ied_plugin_msgpop_content");
+            status = xhr.find('http-status').attr('value')
+            if (status == '200 OK') {
+                msgContent.append(xhr.find('ied_plugin_phpdoc').attr('value'));
+            } else if (status == '501 Not Implemented') {
+                msgContent.append(xhr.find('error_msg').attr('value'));
+            }
+            ied_plugin_toggle_msgpop('1');
+        }
+
+        // code save barfed
+        if (settings.data.indexOf('step=ied_plugin_code_save') > -1) {
+            var msg = xhr.find('ied_plugin_msg').attr('value');
+            var line = xhr.find('ied_plugin_err_line').attr('value');
+            jQuery('#ied_plugin_jumpToLine').val(line);
+            ied_goToLine();
+            var codeobj = jQuery("#plugin_editor");
+            codeobj.css({'opacity': '.75'}); // Reduced opacity as a visual cue that something's wrong
+            eval(msg); // bleurgh!
+        }
+    });
+
+    // Handle 'x' button
+    jQuery(document).on('click', '.ied_plugin_xbtn', function (event) {
+        var elem = jQuery(this).prev('label');
+        var tp_lbl = elem.text();
+
+        sendAsyncEvent(
+        {
+            event: textpattern.event,
+            step: 'textpack_del',
+            ied_tp_lbl: tp_lbl
+        });
+
+        elem.parent().remove();
+        event.preventDefault();
+        ied_plugin_update_tp_count();
+    });
+
+    // Save textpack string to database
+    function ied_plugin_tp_save(event)
+    {
+        var elem = jQuery(this);
+        var isSel = elem.is('select');
+        var tp_lbl = elem.nextAll('label').text();
+        var tp_str = (isSel) ? elem.prevAll('input').val() : elem.val();
+        var tp_ev = (isSel) ? elem.val() : elem.nextAll('select').val();
+        var tp_evt = (tp_ev=='public' || tp_ev=='common') ? tp_ev : jQuery('#ied_plugin_tp_prefix').val();
+        var tp_lng = jQuery('#ied_plugin_tp_lang').val();
+
+
+        sendAsyncEvent(
+        {
+            event: textpattern.event,
+            step: 'textpack_save',
+            ied_tp_evt: tp_evt,
+            ied_tp_lbl: tp_lbl,
+            ied_tp_lng: tp_lng,
+            ied_tp_str: tp_str
+        });
+    }
+
+    // Handle saving textpack string
+    jQuery(document).on('blur', '#options_group_pack ul li input', ied_plugin_tp_save);
+    jQuery(document).on('change', '#options_group_pack ul li select', ied_plugin_tp_save);
+
+    // Handle language change.
+    jQuery("#ied_plugin_tp_lang").change(function (event) {
+        jQuery('#ied_plugin_tp_load_count').empty().show();
+
+        var tp_lng = jQuery(this).val();
+        var tp_dflt = jQuery('#ied_plugin_tp_lang_dflt').val();
+        var sel = '#options_group_pack ul li';
+        var numStrings = sel.length;
+        var numFetched = 0;
+
+        jQuery(sel).each(function () {
+            var obj = jQuery(this);
+            var tp_lbl = obj.find('label').text();
+            var tp_dest = obj.find('input');
 
             sendAsyncEvent(
             {
                 event: textpattern.event,
-                step: 'textpack_save',
-                ied_tp_evt: tp_evt,
+                step: 'textpack_get',
                 ied_tp_lbl: tp_lbl,
                 ied_tp_lng: tp_lng,
-                ied_tp_str: tp_str
-            });
-        }
-
-        // Handle saving textpack string
-        jQuery(document).on('blur', '#options_group_pack ul li input', ied_plugin_tp_save);
-        jQuery(document).on('change', '#options_group_pack ul li select', ied_plugin_tp_save);
-
-        // Handle language change
-        jQuery("#ied_plugin_tp_lang").change(function (event) {
-            jQuery('#ied_plugin_tp_load_count').empty().show();
-
-            var tp_lng = jQuery(this).val();
-            var tp_dflt = jQuery('#ied_plugin_tp_lang_dflt').val();
-            var sel = '#options_group_pack ul li';
-            var numStrings = sel.length;
-            var numFetched = 0;
-
-            jQuery(sel).each(function () {
-                var obj = jQuery(this);
-                var tp_lbl = obj.find('label').text();
-                var tp_dest = obj.find('input');
-
-                sendAsyncEvent(
-                {
-                    event: textpattern.event,
-                    step: 'textpack_get',
-                    ied_tp_lbl: tp_lbl,
-                    ied_tp_lng: tp_lng,
-                    ied_tp_dflt: tp_dflt
-                }, function (data) {
-                    numFetched++;
-                    var theVal = data.ied_plugin_tp_string;
-                    var xl8str = data.ied_plugin_tp_dflt;
-
-                    tp_dest.val(theVal);
-
-                    if (xl8str == undefined || xl8str == '') {
-                        obj.removeAttr('title');
-                    } else {
-                        obj.attr('title', xl8str);
-                    }
-                    if (numFetched < ied_plugin_tp_total) {
-                        jQuery('#ied_plugin_tp_load_count').text(numFetched + '/' + ied_plugin_tp_total);
-                    } else {
-                        jQuery('#ied_plugin_tp_load_count').text('OK').hide('slow');
-                        ied_plugin_update_tp_count();
-                    }
-                },
-                'json');
-            });
-        });
-
-        // Current language refresh
-        jQuery('#ied_plugin_tp_refresh').click(function () {
-            // Trigger the change event
-            jQuery("#ied_plugin_tp_lang").change();
-        });
-
-        // Load textpack strings from plugin's custom gTxt()
-        jQuery("#ied_plugin_tp_load").click(function (event) {
-            var ied_fn = jQuery("#ied_plugin_tp_populate").val();
-
-
-            jQuery('#options_group_pack ul li').each(function () {
-                var obj = jQuery(this);
-                var tp_lbl = obj.find('label').text();
-                var tp_dest = obj.find('input');
-
-                sendAsyncEvent(
-                {
-                    event: textpattern.event,
-                    step: 'textpack_load',
-                    ied_tp_fn: ied_fn,
-                    ied_tp_lbl: tp_lbl
-                }, function (data) {
-                    // Paste the returned string into the input box and save it by invoking blur()
-                    tp_dest.val(data.ied_plugin_tp_string).blur();
-                },
-                'json');
-            });
-            event.preventDefault();
-        });
-
-        // Handle saving code
-        jQuery("#ied_plugin_code_save").click(function (event) {
-            var msgarea = jQuery("#ied_plugin_messages");
-            msgarea.empty();
-            var codeobj = jQuery("#plugin_editor");
-            var codeblock = codeobj.val();
-            var plugin = '{$name}';
-
-            codeobj.css('opacity', '0.4');
-            sendAsyncEvent(
-            {
-                event: textpattern.event,
-                step: 'code_save',
-                plugin: plugin,
-                codeblock: codeblock
+                ied_tp_dflt: tp_dflt
             }, function (data) {
-                codeobj.css({'opacity': '1'});
-                var msg = jQuery(data).find('ied_plugin_msg').attr('value');
-                eval(msg); // yuk!
-            });
+                numFetched++;
+                var theVal = data.ied_plugin_tp_string;
+                var xl8str = data.ied_plugin_tp_dflt;
 
-            event.preventDefault();
+                tp_dest.val(theVal);
+
+                if (xl8str == undefined || xl8str == '') {
+                    obj.removeAttr('title');
+                } else {
+                    obj.attr('title', xl8str);
+                }
+                if (numFetched < ied_plugin_tp_total) {
+                    jQuery('#ied_plugin_tp_load_count').text(numFetched + '/' + ied_plugin_tp_total);
+                } else {
+                    jQuery('#ied_plugin_tp_load_count').text('OK').hide('slow');
+                    ied_plugin_update_tp_count();
+                }
+            },
+            'json');
         });
-
-        // Handle generating phpdoc
-        jQuery("#ied_plugin_btn_phpdoc").click(function (event) {
-            var msgarea = jQuery("#ied_plugin_msgpop");
-            var msgContent = jQuery("#ied_plugin_msgpop .ied_plugin_msgpop_content");
-            msgContent.empty();
-            var fnobj = jQuery("#ied_plugin_to_phpdoc");
-            var fn = fnobj.val();
-            var plugin = '{$name}';
-
-            sendAsyncEvent(
-            {
-                event: textpattern.event,
-                step: 'generate_phpdoc',
-                plugin: plugin,
-                fn: fn
-            }, function (data) {
-                msgContent.append(jQuery(data).find('ied_plugin_phpdoc').attr('value'));
-                ied_plugin_toggle_msgpop('1');
-            });
-
-            event.preventDefault();
-        });
-
-        jQuery('#ied_plugin_tp_oplangs').change(function () {
-            sel = jQuery('#ied_plugin_tp_oplangs option:selected').map(function () { return this.value }).get().join(', ');
-            sendAsyncEvent(
-            {
-                event: textpattern.event,
-                step: 'lang_set',
-                ied_tp_langsel: sel
-            });
-        });
-
     });
+
+    // Current language refresh.
+    jQuery('#ied_plugin_tp_refresh').click(function () {
+        // Trigger the change event
+        jQuery("#ied_plugin_tp_lang").change();
+    });
+
+    // Load textpack strings from plugin's custom gTxt()
+    jQuery("#ied_plugin_tp_load").click(function (event) {
+        var ied_fn = jQuery("#ied_plugin_tp_populate").val();
+
+
+        jQuery('#options_group_pack ul li').each(function () {
+            var obj = jQuery(this);
+            var tp_lbl = obj.find('label').text();
+            var tp_dest = obj.find('input');
+
+            sendAsyncEvent(
+            {
+                event: textpattern.event,
+                step: 'textpack_load',
+                ied_tp_fn: ied_fn,
+                ied_tp_lbl: tp_lbl
+            }, function (data) {
+                // Paste the returned string into the input box and save it by invoking blur()
+                tp_dest.val(data.ied_plugin_tp_string).blur();
+            },
+            'json');
+        });
+        event.preventDefault();
+    });
+
+    // Handle saving metadata.
+    jQuery("#ied_plugin_meta_save").click(function(event) {
+        var msgarea = jQuery("#ied_plugin_messages");
+        msgarea.empty();
+        var metaobj = jQuery("#options_group_meta");
+        var datablock = {};
+
+        jQuery(metaobj).find('input[type="text"], select').each(function() {
+            var obj = jQuery(this);
+            var objid = obj.attr('name');
+            datablock[objid] = obj.val();
+        });
+        jQuery(metaobj).find('input[type="radio"], input[type="checkbox"]').each(function() {
+            var obj = jQuery(this);
+            var objid = obj.attr('name');
+            if (obj.prop('checked') === true) {
+                datablock[objid] = obj.val();
+            }
+        });
+        jQuery(metaobj).find('select').each(function() {
+            var obj = jQuery(this);
+            var objid = obj.attr('name');
+            if (obj.prop('selected') === true) {
+                datablock[objid] = obj.val();
+            }
+        });
+        var plugin = '{$name}';
+
+        metaobj.css('opacity', '0.4');
+        sendAsyncEvent(
+        {
+            event: textpattern.event,
+            step: 'meta_save',
+            plugin: plugin,
+            data: datablock
+        }, function(data) {
+            metaobj.css({'opacity': '1'});
+            var msg = jQuery(data).find('ied_plugin_msg').attr('value');
+            eval(msg); // yuk!
+        });
+
+        event.preventDefault();
+    });
+
+    // Handle saving code.
+    jQuery("#ied_plugin_code_save").click(function (event) {
+        var msgarea = jQuery("#ied_plugin_messages");
+        msgarea.empty();
+        var codeobj = jQuery("#plugin_editor");
+        var codeblock = codeobj.val();
+        var plugin = '{$name}';
+
+        codeobj.css('opacity', '0.4');
+        sendAsyncEvent(
+        {
+            event: textpattern.event,
+            step: 'code_save',
+            plugin: plugin,
+            codeblock: codeblock
+        }, function (data) {
+            codeobj.css({'opacity': '1'});
+            var msg = jQuery(data).find('ied_plugin_msg').attr('value');
+            eval(msg); // yuk!
+        });
+
+        event.preventDefault();
+    });
+
+    // Handle generating phpdoc
+    jQuery("#ied_plugin_btn_phpdoc").click(function (event) {
+        var msgarea = jQuery("#ied_plugin_msgpop");
+        var msgContent = jQuery("#ied_plugin_msgpop .ied_plugin_msgpop_content");
+        msgContent.empty();
+        var fnobj = jQuery("#ied_plugin_to_phpdoc");
+        var fn = fnobj.val();
+        var plugin = '{$name}';
+
+        sendAsyncEvent(
+        {
+            event: textpattern.event,
+            step: 'generate_phpdoc',
+            plugin: plugin,
+            fn: fn
+        }, function (data) {
+            msgContent.append(jQuery(data).find('ied_plugin_phpdoc').attr('value'));
+            ied_plugin_toggle_msgpop('1');
+        });
+
+        event.preventDefault();
+    });
+
+    jQuery('#ied_plugin_tp_oplangs').change(function () {
+        sel = jQuery('#ied_plugin_tp_oplangs option:selected').map(function () { return this.value }).get().join(', ');
+        sendAsyncEvent(
+        {
+            event: textpattern.event,
+            step: 'lang_set',
+            ied_tp_langsel: sel
+        });
+    });
+
+});
 EOJS
             );
     }
@@ -3064,39 +3114,39 @@ EOJS
             switch ($editor) {
                 case "tiny_mce":
                     $out[] = <<<EOJS
-    {$jsop}
-    <script type="text/javascript">
-    tinyMCE.init({
-        mode : "specific_textareas",
-        editor_selector : "mceEditor"
-        {$hop}
-    });
-    </script>;
+{$jsop}
+<script type="text/javascript">
+tinyMCE.init({
+    mode : "specific_textareas",
+    editor_selector : "mceEditor"
+    {$hop}
+});
+</script>;
 EOJS;
                 break;
                 case "edit_area":
                     $out[] = <<<EOJS
-    {$jsop}
-    <script type="text/javascript">
-    // initialisation
-    editAreaLoader.init({
-        id: "plugin_editor",
-        syntax: "php"
-        {$cop}
-    });
-    </script>
+{$jsop}
+<script type="text/javascript">
+// initialisation
+editAreaLoader.init({
+    id: "plugin_editor",
+    syntax: "php"
+    {$cop}
+});
+</script>
 EOJS;
                 break;
                 case "codemirror":
                     $out[] = <<<EOJS
-    {$jsop}
-    <script type="text/javascript">
-    myTextArea = document.getElementById("plugin_editor");
-    var ied_pc_editor = CodeMirror.fromTextArea(myTextArea, {
-        value: myTextArea.value
-        {$cop}
-    });
-    </script>
+{$jsop}
+<script type="text/javascript">
+myTextArea = document.getElementById("plugin_editor");
+var ied_pc_editor = CodeMirror.fromTextArea(myTextArea, {
+    value: myTextArea.value
+    {$cop}
+});
+</script>
 EOJS;
                 break;
                 case "codepress":
@@ -3166,8 +3216,8 @@ EOJS;
     /**
      * Display the setup / prefs panel.
      *
-     * @param  string $message [description]
-     * @return [type]          [description]
+     * @param  string $message Any feedback error / info message to disply
+     * @return string          HTML
      */
     public function prefs($message = '')
     {
@@ -3186,32 +3236,33 @@ EOJS;
 
         echo '<h1 class="txp-heading">' . gTxt('ied_plugin_lbl_setup') . '</h1>'.
             script_js(<<<EOJS
-    var ied_plugin_path_re = new RegExp("^.*[/\\]", "g")
-    public function ied_plugin_prefswap(selID, selValue)
-    {
-        var id = selID+'_path';
-        var nuval = ((basename($("#"+id).val()) == selValue) ? $("#"+id).val() : dirname($("#"+id).val())+selValue);
-        if ($("#"+selID)[0].selectedIndex == 0) {
-            $("#"+id).attr("disabled", true);
-        } else {
-            $("#"+id).attr("disabled", false);
-            $("#"+id).val(nuval);
-        }
+var ied_plugin_path_re = new RegExp("^.*[/\\]", "g")
+function ied_plugin_prefswap(selID, selValue)
+{
+    var id = selID+'_path';
+    var nuval = ((basename($("#"+id).val()) == selValue) ? $("#"+id).val() : dirname($("#"+id).val())+selValue);
+
+    if ($("#"+selID)[0].selectedIndex == 0) {
+        $("#"+id).attr("disabled", true);
+    } else {
+        $("#"+id).attr("disabled", false);
+        $("#"+id).val(nuval);
     }
-    public function basename(path, suffix)
-    {
-        return path.replace(ied_plugin_path_re, '');
-    }
-    public function dirname(path)
-    {
-        return path.match(ied_plugin_path_re);
-    }
-    jQuery(function () {
-        jQuery(".ied_plugin_setup select option:selected").each(function (obj) {
-            var item = jQuery(this);
-            ied_plugin_prefswap(item.parent().attr('id'), item.val());
-        });
+}
+function basename(path, suffix)
+{
+    return path.replace(ied_plugin_path_re, '');
+}
+function dirname(path)
+{
+    return path.match(ied_plugin_path_re);
+}
+jQuery(function () {
+    jQuery(".ied_plugin_setup select option:selected").each(function (obj) {
+        var item = jQuery(this);
+        ied_plugin_prefswap(item.parent().attr('id'), item.val());
     });
+});
 EOJS
             );
 
@@ -3297,10 +3348,9 @@ EOJS
     /**
      * Delete plugin prefs.
      *
-     * @param  string $showpane [description]
-     * @return [type]           [description]
+     * @param  integer $showpane Whether to display the panel afterwards
      */
-    public function prefs_remove($showpane = '1')
+    public function prefs_remove($showpane = 1)
     {
         safe_delete('txp_prefs', "name like 'ied_plugin_%'");
 
@@ -3320,16 +3370,16 @@ EOJS
     {
         $ied_langs = array();
         if ($flavour == 'installed') {
-            // Self-join to get all the installed langs and language strings in one step
-    //      $installed_langs = safe_query('select t1.lang, t2.data from '.PFX.'txp_lang as t1, '.PFX.'txp_lang as t2 WHERE t1.lang = t2.name GROUP BY lang');
+            // Self-join to get all the installed langs and language strings in one step.
+//            $installed_langs = safe_query('select t1.lang, t2.data from '.PFX.'txp_lang as t1, '.PFX.'txp_lang as t2 WHERE t1.lang = t2.name GROUP BY lang');
             $ied_langs = safe_column('lang', 'txp_lang', '1=1 GROUP BY lang');
         } else {
-            // Grab all available langs from the RPC server
+            // Grab all available langs from the RPC server.
             require_once txpath.'/lib/IXRClass.php';
 
             $client = new IXR_Client(RPC_SERVER);
 
-            // Get items from RPC
+            // Get items from RPC.
             @set_time_limit(5);
             if ($client->query('tups.listLanguages', get_pref('blog_uid'))) {
                 $response = $client->getResponse();
@@ -3339,7 +3389,7 @@ EOJS
             }
         }
 
-        // Build the select list array
+        // Build the select list array.
         $langlist = array();
         foreach ($ied_langs as $ied_lang) {
             $langlist[$ied_lang] = gTxt($ied_lang);
@@ -3349,11 +3399,11 @@ EOJS
     }
 
     /**
-     * Build textpack fro strings in the database.
+     * Build textpack from strings in the database.
      *
-     * @param  [type]  $name      [description]
-     * @param  integer $force_all [description]
-     * @return [type]             [description]
+     * @param  string  $name      Plugin name
+     * @param  integer $force_all Whether to build for the current langue (0) or all installed languages (1)
+     * @return string             The Textpack
      */
     public function textpack_build($name, $force_all = 0)
     {
@@ -3362,14 +3412,21 @@ EOJS
         if ($force_all === 0) {
             $fetch_lang = gps('lang');
         }
+
         if (!$fetch_lang) {
-            $fetch_lang = ($force_all === 1) ? join(',', array_keys($this->lang_list('installed'))) : get_pref('ied_plugin_lang_selected', '');
+            $fetch_lang = ($force_all === 1)
+                ? join(',', array_keys($this->lang_list('installed')))
+                : get_pref('ied_plugin_lang_selected', '');
         }
 
         $tpout = array();
+
         if ($fetch_lang) {
             $chosen_lang = get_pref('ied_plugin_lang_default', '');
-            $dflt_lang = ($chosen_lang === '') ? get_pref('language') : $chosen_lang; // Guard against situations when the chosen default lang is 'any'
+
+            // Guard against situations when the chosen default lang is 'any'.
+            $dflt_lang = ($chosen_lang === '') ? get_pref('language') : $chosen_lang;
+
             $tp_pfx = unserialize(get_pref('ied_plugin_tp_prefix', '', 1));
             $tp_pfx = isset($tp_pfx[$name]) ? $tp_pfx[$name] : '';
             $tp_rows = $this->textpack_grab($fetch_lang, $tp_pfx);
@@ -3378,10 +3435,11 @@ EOJS
                 $ctr = 0;
                 $prevlang = '';
 
-                // Go through all the languages and put the default language at the start of the array
+                // Go through all the languages and put the default language at the start of the array.
                 foreach ($tp_rows as $row) {
                     // Add the event marker
                     $theEvent = in_array($row['event'], array('public', 'common')) ? $row['event'] : $tp_pfx;
+
                     if ($prevlang != $row['lang']) {
                         $ctr++;
                     }
@@ -3392,31 +3450,37 @@ EOJS
                     $prevevent = $row['event'];
                 }
 
-                ksort($tplang); // Make sure default language is actually first
+                // Make sure default language is actually first.
+                ksort($tplang);
 
                 // Build the final textpack array with language markers.
                 // Note the marker for the default language may (should!) be omitted if the author wants
                 // the strings to be installed regardless of language on destination server.
                 // If a specific language is set and the user does not have that language
-                // installed, the strings would not be inserted
+                // installed, the strings would not be inserted.
                 $prevevent = '';
+
                 foreach ($tplang as $idx => $langblock) {
                     foreach ($langblock as $ev => $codeblock) {
                         $tpheader = array();
                         $tpstrings = array();
+
                         if ($prevevent != $ev) {
-                            $tpheader[] = '#@'.$ev;
+                            $tpheader[] = '#@' . $ev;
                         }
+
                         foreach ($codeblock as $code => $data) {
-                            if ( ($idx == 0 && $chosen_lang) || ($idx > 0) ) {
-                                $tpheader[] = '#@language '.$code;
+                            if (($idx == 0 && $chosen_lang) || ($idx > 0)) {
+                                $tpheader[] = '#@language ' . $code;
                             }
+
                             foreach ($data as $key => $val) {
-                                // Don't output empty strings
+                                // Don't output empty strings.
                                 if ($val) {
                                     $tpstrings[] = $key . ' => ' . $val;
                                 }
                             }
+
                             if ($tpstrings) {
                                 $tpout = array_merge($tpout, $tpheader, $tpstrings);
                             }
@@ -3432,9 +3496,9 @@ EOJS
     /**
      * Read textpack strings with the given prefix from the database.
      *
-     * @param  [type] $lang   [description]
-     * @param  [type] $prefix [description]
-     * @return [type]         [description]
+     * @param  string $lang   Language of strings to fetch
+     * @param  string $prefix Prefix to find
+     * @return array          Record set of matching strings
      */
     public function textpack_grab($lang, $prefix)
     {
@@ -3449,17 +3513,25 @@ EOJS
         return ($prefix) ? safe_rows('name, data, lang, event', 'txp_lang', $lang_query."name LIKE '".doSlash($prefix)."%' ORDER BY event,lang,name") : array();
     }
 
-    // -------------------------------------------------------------
-    // *** AJAX calls
-    // -------------------------------------------------------------
+    /**
+     * Set the current Textpack language from which to display strings in the interface.
+     *
+     * Requires POST variable:
+     *  param  string ied_tp_langsel  The language name to set
+     */
     public function lang_set()
     {
         $sel = doSlash(gps('ied_tp_langsel'));
         set_pref('ied_plugin_lang_selected', $sel, 'ied_plugin', PREF_HIDDEN, 'text_input', 0, PREF_PRIVATE);
     }
-    // -------------------------------------------------------------
-    // Store the plugin textpack prefix
-    public function set_tp_prefix($plugname='', $pfx='')
+
+    /**
+     * Store the plugin textpack prefix.
+     *
+     * @param string $plugname Plugin name to store (if omitted, tries GET/POST for 'plugin')
+     * @param string $pfx      Prefix to store (if omitted, tries GET/POST for 'prefix')
+     */
+    public function set_tp_prefix($plugname = '', $pfx = '')
     {
         $plugname = ($plugname) ? $plugname : gps('plugin');
         $pfx = ($pfx) ? $pfx : gps('prefix');
@@ -3470,9 +3542,25 @@ EOJS
             set_pref('ied_plugin_tp_prefix', serialize($curr_pfx), 'ied_plugin', PREF_HIDDEN, 'text_input');
         }
     }
-    // -------------------------------------------------------------
-    // TODO: sanitize $fn
-    // Return a string from a (type 4 or 5) plugin gTxt() function/method.
+
+    /**
+     * AJAX: Return a Textpack string from a (type 4 or 5) plugin gTxt() function/method.
+     *
+     * Given a function name (usually 'abc_plugin_gTxt') it calls the function
+     * to fetch the given string from the plugin. By calling this repeatedly
+     * or each string, an entire Textpack can be built from strings that were
+     * previously hard-coded in old plugins.
+     *
+     * Note the destination plugin MUST be of type 4 or 5 in order for the
+     * function to be callable so you may have to (temporarily) alter the
+     * plugin type before using this feature.
+     *
+     * Requires POST variables:
+     *  param  string ied_tp_fn  The function to call
+     *  param  string ied_tp_lbl The language label (key)
+     * @return array             JSON structure containing the string's value
+     * @todo sanitize $fn
+     */
     public function textpack_load()
     {
         $fn = doSlash(gps('ied_tp_fn'));
@@ -3494,14 +3582,29 @@ EOJS
             echo json_encode(array('ied_plugin_tp_string' => $ret));
         }
     }
-    // -------------------------------------------------------------
+
+    /**
+     * AJAX: Delete a Textpack string from the database.
+     *
+     * Requires POST variable:
+     *  param  string ied_tp_lbl The language label (key) to delete
+     */
     public function textpack_del()
     {
         $lbl = doSlash(gps('ied_tp_lbl'));
 
         $ret = safe_delete('txp_lang', "name='$lbl'");
     }
-    // -------------------------------------------------------------
+
+    /**
+     * AJAX: save a Textpack string to the database.
+     *
+     * Requires POST variables:
+     *  param  string ied_tp_lbl The language label (key)
+     *  param  string ied_tp_str The data value to store
+     *  param  string ied_tp_lng Desired language of string
+     *  param  string ied_tp_evt Event (group) that the string belongs in
+     */
     public function textpack_save()
     {
         global $DB;
@@ -3513,13 +3616,23 @@ EOJS
 
         $where = "name='$lbl' AND lang='$lng'";
         $ret = safe_update('txp_lang', "data='$str', event='$evt'", $where);
+
         if ($ret && (mysqli_affected_rows($DB->link) || safe_count('txp_lang', $where))) {
-            // Update OK: do nothing else
+            // Update OK: do nothing else.
         } else {
             $ret = safe_insert('txp_lang', "name='$lbl', lang='$lng', event='$evt', data='$str'");
         }
     }
-    // -------------------------------------------------------------
+
+    /**
+     * AJAX: Fetch a Textpack string from the database.
+     *
+     * Requires POST variables:
+     *  param  string ied_tp_lbl  The language label (key)
+     *  param  string ied_tp_lng  Language of string to fetch
+     *  param  string ied_tp_dflt Default language to fetch string if main lang missing
+     * @return array              JSON response
+     */
     public function textpack_get()
     {
         $lbl = doSlash(gps('ied_tp_lbl'));
@@ -3528,6 +3641,7 @@ EOJS
 
         $rs = safe_rows('lang, data', 'txp_lang', "name='$lbl' AND (lang='$lng' OR lang='$dflt')");
         $out = array();
+
         foreach ($rs as $row) {
             if (($row['lang'] == $dflt) && ($lng != $dflt)) {
                 $out['ied_plugin_tp_dflt'] = $row['data'];
@@ -3535,10 +3649,18 @@ EOJS
                 $out['ied_plugin_tp_string'] = $row['data'];
             }
         }
+
         echo json_encode($out);
     }
 
-    // -------------------------------------------------------------
+    /**
+     * AJAX: Save just the plugin code, optionally checking syntax.
+     *
+     * Requires POST variables:
+     *  param  string plugin    Name of plugin to save against
+     *  param  string codeblock PHP code
+     * @return array            XML response
+     */
     public function code_save()
     {
         global $theme;
@@ -3566,11 +3688,62 @@ EOJS
     }
 
     /**
+     * AJAX: Save just the plugin metadata.
+     *
+     * Requires POST variables:
+     *  param  string plugin Name of plugin to save against
+     *  param  array  data   Name-value pairs to store
+     * @return array         XML response
+     */
+    public function meta_save() {
+        global $theme;
+
+        $ied_plugin_prefs = $this->get_prefs();
+
+        $plug = doSlash(ps('plugin'));
+        $data = ps('data');
+        $msg = '';
+        $set = array();
+        $meta = array();
+
+        foreach ($data as $key => $value) {
+            switch ($key) {
+                case 'description':
+                case 'version':
+                case 'author':
+                case 'author_uri':
+                case 'type':
+                case 'load_order':
+                case 'flags':
+                case 'status':
+                    $set[] = $key . "='".doSlash($value)."'";
+                    break;
+                case 'newname':
+                    $val = doSlash($value);
+                    $set[] = "name='".$val."'";
+                    $meta['name'] = $val;
+                    break;
+            }
+        }
+
+        $update = join(',', $set);
+        $ret = safe_update('txp_plugin', $update, "name='$plug'");
+
+        if ($ret) {
+            $msg = $theme->announce_async(gTxt('ied_plugin_meta_saved'));
+        } else {
+            $msg = $theme->announce_async(array(gTxt('ied_plugin_meta_saved_fail'), E_ERROR));
+        }
+
+        send_xml_response(array('ied_plugin_msg' => $msg));
+    }
+
+    /**
      * Check the syntax of some PHP code.
      *
      * Mostly from a comment in http://php.net/manual/en/function.php-check-syntax.php
      *
-     * @param string $code PHP code to check.
+     * @param  string $code  PHP code to check.
      * @return boolean|array If false, then check was successful, otherwise an array(message,line) of errors is returned.
      */
     public function check_syntax_err($code)
