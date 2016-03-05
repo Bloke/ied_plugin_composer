@@ -1346,9 +1346,22 @@ EOJS
         $plugtype = selectInput('type', $plugtypes, $type, false, '', 'type');
 
         $plugorder = selectInput('load_order', $orders, $load_order, 0, 0);
-        $flaglist = checkbox('flags[]',PLUGIN_HAS_PREFS,(($flags & PLUGIN_HAS_PREFS)?1:0)) .n. '<label>'.gTxt('ied_plugin_flag_has_prefs').'</label>&nbsp;&nbsp;'
-            .checkbox('flags[]',PLUGIN_LIFECYCLE_NOTIFY,(($flags & PLUGIN_LIFECYCLE_NOTIFY)?1:0)) .n. '<label>'.gTxt('ied_plugin_flag_lifecycle_notify').'</label>&nbsp;&nbsp;';
-//      .checkbox('flags[]',0x0004,(($flags & 0x0004)?1:0)) . '<label>Summat else</label>&nbsp;&nbsp;';
+        $flaglist = checkbox(
+                'flags[]',
+                PLUGIN_HAS_PREFS,
+                (($flags & PLUGIN_HAS_PREFS) ? 1 : 0),
+                '',
+                'ied_plugin_flag_has_prefs'
+            )
+            .n. '<label for="ied_plugin_flag_has_prefs">' . gTxt('ied_plugin_flag_has_prefs') . '</label>'
+            .n. checkbox(
+                'flags[]',
+                PLUGIN_LIFECYCLE_NOTIFY,
+                (($flags & PLUGIN_LIFECYCLE_NOTIFY) ? 1 : 0),
+                '',
+                'ied_plugin_flag_lifecycle_notify'
+            )
+            .n. '<label for="ied_plugin_flag_lifecycle_notify">' . gTxt('ied_plugin_flag_lifecycle_notify') . '</label>';
 
         $sub = graf(fInput('submit', '', gTxt('save'), 'publish', '', '', '', '', 'ied_editSave'), array('class' => 'txp-save'));
         $codesub = (!$editfile) ? '<a class="navlink" name="ied_plugin_code_save" id="ied_plugin_code_save">' . gTxt('ied_plugin_code_save') . '</a>' : '';
