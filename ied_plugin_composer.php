@@ -625,6 +625,7 @@ input[type="submit"] { margin:0.3em 0.7em; }
 #options_group_pack ul { list-style-type:none; }
 #options_group_pack ul label { margin:0 8px 0 0; }
 #options_group_pack ul input { width:450px; }
+#options_group_pack li { margin-bottom:.2em }
 .distribution-code { height:4.2em!important; }
 .ied_plugin_edit_toolbar { text-align:right; width:95%; display:inline-block; margin:-2em 0 0 0; }
 #ied_plugin_msgpop { display:none; position:absolute; left:200px; max-width:500px; border:3px ridge #999; opacity:.92; filter:alpha(opacity:92); padding:15px 20px; background-color:#e2dfce; color:#80551e; }
@@ -1345,7 +1346,7 @@ EOJS
             .checkbox('flags[]',PLUGIN_LIFECYCLE_NOTIFY,(($flags & PLUGIN_LIFECYCLE_NOTIFY)?1:0)) .n. '<label>'.gTxt('ied_plugin_flag_lifecycle_notify').'</label>&nbsp;&nbsp;';
 //      .checkbox('flags[]',0x0004,(($flags & 0x0004)?1:0)) . '<label>Summat else</label>&nbsp;&nbsp;';
 
-        $sub = graf(fInput('submit', '', gTxt('save'), 'publish', '', '', '', '', 'ied_editSave'));
+        $sub = graf(fInput('submit', '', gTxt('save'), 'publish', '', '', '', '', 'ied_editSave'), array('class' => 'txp-save'));
         $codesub = (!$editfile) ? '<a class="navlink" name="ied_plugin_code_save" id="ied_plugin_code_save">' . gTxt('ied_plugin_code_save') . '</a>' : '';
 
         // Language info. ied_visible_langs is the user's choice of which ones they want to see available.
@@ -1524,7 +1525,7 @@ EOJS
                 .n. '<span id="ied_plugin_tp_load_count"></span>'
                 .n. '</div>'
                 .n. '</div>'
-                .n. '<a href="#" id="ied_plugin_add_string">+</a>'
+                .n. '<a href="#" id="ied_plugin_add_string" class="txp-button">+</a>'
                 .n. '<ul>'
                 .n. join(n, $tp_strings)
                 .n. '</ul>'
