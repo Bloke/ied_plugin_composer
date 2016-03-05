@@ -1772,10 +1772,10 @@ jQuery(function () {
             for (var idx = 0; idx < ied_tp_curr.length; idx++) {
                 if ((pos = jQuery.inArray(ied_tp_curr[idx], ied_tp_used)) > -1) {
                     ied_tp_used.splice(pos, 1);
-                    jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', false).next(".ied_plugin_xbtn").remove();
+                    jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', false).next(".destroy").remove();
                 } else {
                     setclass = 1;
-                    jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', true).next(".ied_plugin_xbtn").remove().end().after('<a href="#" class="ied_plugin_xbtn">[x]</a>');
+                    jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', true).next(".destroy").remove().end().after('<a href="#" class="destroy"><span class="ui-icon ui-icon-close">Delete</span></a>');
                 }
             }
             // For each remaining item that has been used, add an input box
@@ -1840,7 +1840,7 @@ jQuery(function () {
     });
 
     // Handle 'x' button
-    jQuery(document).on('click', '.ied_plugin_xbtn', function (event) {
+    jQuery(document).on('click', '.destroy', function (event) {
         var elem = jQuery(this).prev('label');
         var tp_lbl = elem.text();
 
