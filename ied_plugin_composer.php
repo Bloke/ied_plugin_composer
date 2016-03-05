@@ -161,7 +161,8 @@ ied_plugin_type_5 => Admin + Public (+AJAX)
 ied_plugin_updated => Plugin {name} updated
 ied_plugin_uploaded => Plugin {name} uploaded
 ied_plugin_upload_php => Upload plugin
-ied_plugin_utils_legend => Distribution (only for use after saving)
+ied_plugin_utils_legend => Distribution
+ied_plugin_utils_legend_extra => Only for use after saving
 ied_plugin_view_help => Help: {name}
 #@ied_plugin
 #@language fr-fr
@@ -264,7 +265,8 @@ ied_plugin_type_5 => Admin + Public (+AJAX)
 ied_plugin_updated => Plugin {name} mis à jour
 ied_plugin_uploaded => Plugin {name} téléchargé
 ied_plugin_upload_php => Télécharger un plugin
-ied_plugin_utils_legend => Distribution (effectif après sauvegarde)
+ied_plugin_utils_legend => Distribution
+ied_plugin_utils_legend_extra => Effectif après sauvegarde
 ied_plugin_view_help => Aide de : {name}
 EOT;
 
@@ -1461,6 +1463,7 @@ EOJS
                 .n. $sub
                 .n. '<section class="txp-prefs-group" id="options_group_dist" aria-labelledby="options_group_dist-label">'
                 .n. hed(gTxt('ied_plugin_utils_legend'), 2, array('id' => 'options_group_dist-label'))
+                .n. graf(gTxt('ied_plugin_utils_legend_extra'), array('class' => 'warning'))
                 .n. (($distblock) ? '<div>' . $distribution . '</div>' : '')
                 .n. '<div class="txp-form-field txp-form-field-textarea">'
                 .n. '<div class="txp-form-field-label"><label for="ied_plugin_tp_oplangs">' . gTxt('ied_plugin_lang_choose') . '</label></div>'
