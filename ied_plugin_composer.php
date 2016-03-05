@@ -148,7 +148,7 @@ ied_plugin_setup => Setup
 ied_plugin_syntax_check => Syntax check on code save
 ied_plugin_syntax_err => Syntax error
 ied_plugin_toggle => Toggle
-ied_plugin_tp_legend => Textpack strings
+ied_plugin_pack_legend => Textpack strings
 ied_plugin_tp_populate => Load strings from function
 ied_plugin_tp_prefix => Textpack prefix
 ied_plugin_type => Plugin type
@@ -248,7 +248,7 @@ ied_plugin_save_as => Sauver sous {name}
 ied_plugin_setup => Configuration
 ied_plugin_syntax_check => Vérifier la syntaxe du code avant sauvegarde
 ied_plugin_syntax_err => Erreur de syntaxe
-ied_plugin_tp_legend => Chaînes du Textpack
+ied_plugin_pack_legend => Chaînes du Textpack
 ied_plugin_tp_populate => Essayer de charger les chaînes depuis la fonction
 ied_plugin_tp_prefix => Préfixe du Textpack
 ied_plugin_type => Type de plugin
@@ -617,15 +617,15 @@ class ied_pc
 input[type="submit"] { margin:0.3em 0.7em; }
 .ied_label { margin:0 0.2em 0 0.6em;}
 .setup { float:right; }
-.ied_plugin_resizehandle { cursor:s-resize; float:left; text-align:center; font-size:1em; width:65%; padding:2px 0 4px; }
 .ied_plugin_info_bar { text-align:right; }
 #ied_plugin_jumpToLine { width:4em; margin:0 1em 0 0.4em; }
 .ied_editForm { width:{edwidth}; margin:0 auto; }
 .ied_subdue { color:gray; padding:1px 2px 2px 1px; }
 #ied_plugin_tp_controls input[type="text"] { width:16%; }
-#ied_plugin_tp_strings ul { list-style-type:none; }
-#ied_plugin_tp_strings ul label { margin:0 8px 0 0; }
-#ied_plugin_tp_strings ul input { width:450px; }
+#options_group_pack ul { list-style-type:none; }
+#options_group_pack ul label { margin:0 8px 0 0; }
+#options_group_pack ul input { width:450px; }
+.distribution-code { height:4.2em!important; }
 .ied_plugin_edit_toolbar { text-align:right; width:95%; display:inline-block; margin:-2em 0 0 0; }
 #ied_plugin_msgpop { display:none; position:absolute; left:200px; max-width:500px; border:3px ridge #999; opacity:.92; filter:alpha(opacity:92); padding:15px 20px; background-color:#e2dfce; color:#80551e; }
 #ied_plugin_msgpop .publish { float:right; }
@@ -1300,7 +1300,7 @@ EOJS
             $plugin['order'] = $load_order;
             $plugin['flags'] = $flags;
             $plugin['md5'] = md5( $plugin['code'] );
-            $distribution = '<textarea name="distribution" rows="1" onclick="this.select()">'.base64_encode(serialize($plugin)).'</textarea>';
+            $distribution = '<textarea name="distribution" class="distribution-code" rows="1" onclick="this.select()">'.base64_encode(serialize($plugin)).'</textarea>';
         }
 
         for ($i = 1; $i <= 9; $i++) $orders[$i] = $i;
@@ -1324,27 +1324,32 @@ EOJS
         $author_widget = fInput('text', 'author', $author, '', '', '', INPUT_REGULAR);
         $author_uri_widget = fInput('text', 'author_uri', $author_uri, '', '', '', INPUT_REGULAR);
         $version_widget = fInput('text', 'version', $version, 'input-small', '', '',INPUT_SMALL) .sp. (($editfile) ? checkbox('rename_file', '1', 0, '','rename_file') . ' <label for="rename_file">'.gTxt('ied_plugin_rename_file').'</label>' : checkbox('restore_point', '1', 0, '','restore_point') . ' <label for="restore_point">'.gTxt('ied_plugin_restore_point').'</label>');
-        $description_widget = fInput('text', 'description', $description, 'input-xlarge', '', '', INPUT_LARGE);
+        $description_widget = fInput('text', 'description', $description, 'input-xlarge', '', '', INPUT_REGULAR);
         $codeblock = '<textarea name="code" id="plugin_editor" rows="'.INPUT_REGULAR.'" class="code codepress php" maxlength="'.$this->ied_plugin_globals['size_code'].'">'.txpspecialchars($code).'</textarea><div class="ied_plugin_info_bar"><span>'.gTxt('ied_plugin_jump_to_line').'</span><input type="text" id="ied_plugin_jumpToLine" size="5" maxlength="6" /><span class="ied_plugin_charsRemain"></span></div>';
-        $help_widget = '<textarea name="help" rows="'.INPUT_REGULAR.'" class="mceEditor" maxlength="'.$this->ied_plugin_globals['size_help'].'">'.txpspecialchars($help).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>';
-        $css_widget = ($styleblock) ? '<textarea name="css" rows="'.INPUT_MEDIUM.'" class="code" maxlength="'.$this->ied_plugin_globals['size_css'].'">'.txpspecialchars($css).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>' : '';
+        $help_widget = '<textarea name="help" id="plugin_help" rows="'.INPUT_REGULAR.'" class="mceEditor" maxlength="'.$this->ied_plugin_globals['size_help'].'">'.txpspecialchars($help).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>';
+        $css_widget = ($styleblock) ? '<textarea name="css" id="plugin_help_css" rows="'.INPUT_MEDIUM.'" class="code" maxlength="'.$this->ied_plugin_globals['size_css'].'">'.txpspecialchars($css).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>' : '';
         $plugstatus = (!$editfile) ? sp.sp.checkbox('status',1,$status, '','status'). ' <label for="status">'.gTxt('ied_plugin_enable').'</label>' : '';
-        $plugtype = radio('type',0,(($type==0)?1:0)).gTxt('ied_plugin_type_0')." "
-            . radio('type',1,(($type==1)?1:0)).gTxt('ied_plugin_type_1')." "
-            . radio('type',2,(($type==2)?1:0)).gTxt('ied_plugin_type_2')." "
-            . radio('type',3,(($type==3)?1:0)).gTxt('ied_plugin_type_3')." "
-            . radio('type',4,(($type==4)?1:0)).gTxt('ied_plugin_type_4')." "
-            . radio('type',5,(($type==5)?1:0)).gTxt('ied_plugin_type_5');
-        $plugorder = selectInput('load_order', $orders, $load_order, 0, 0);
-        $flaglist = checkbox('flags[]',PLUGIN_HAS_PREFS,(($flags & PLUGIN_HAS_PREFS)?1:0)) . '<label>'.gTxt('ied_plugin_flag_has_prefs').'</label>&nbsp;&nbsp;'
-            .checkbox('flags[]',PLUGIN_LIFECYCLE_NOTIFY,(($flags & PLUGIN_LIFECYCLE_NOTIFY)?1:0)) . '<label>'.gTxt('ied_plugin_flag_lifecycle_notify').'</label>&nbsp;&nbsp;';
-    //      .checkbox('flags[]',0x0004,(($flags & 0x0004)?1:0)) . '<label>Summat else</label>&nbsp;&nbsp;';
 
-        $sub = fInput('submit', '', gTxt('save'), 'publish', '', '', '', '', 'ied_editSave');
+        $plugtypes = array(
+            '0' => gTxt('ied_plugin_type_0'),
+            '1' => gTxt('ied_plugin_type_1'),
+            '2' => gTxt('ied_plugin_type_2'),
+            '3' => gTxt('ied_plugin_type_3'),
+            '4' => gTxt('ied_plugin_type_4'),
+            '5' => gTxt('ied_plugin_type_5'),
+        );
+        $plugtype = selectInput('type', $plugtypes, $type, false, '', 'type');
+
+        $plugorder = selectInput('load_order', $orders, $load_order, 0, 0);
+        $flaglist = checkbox('flags[]',PLUGIN_HAS_PREFS,(($flags & PLUGIN_HAS_PREFS)?1:0)) .n. '<label>'.gTxt('ied_plugin_flag_has_prefs').'</label>&nbsp;&nbsp;'
+            .checkbox('flags[]',PLUGIN_LIFECYCLE_NOTIFY,(($flags & PLUGIN_LIFECYCLE_NOTIFY)?1:0)) .n. '<label>'.gTxt('ied_plugin_flag_lifecycle_notify').'</label>&nbsp;&nbsp;';
+//      .checkbox('flags[]',0x0004,(($flags & 0x0004)?1:0)) . '<label>Summat else</label>&nbsp;&nbsp;';
+
+        $sub = graf(fInput('submit', '', gTxt('save'), 'publish', '', '', '', '', 'ied_editSave'));
         $codesub = (!$editfile) ? '<a class="navlink" name="ied_plugin_code_save" id="ied_plugin_code_save">' . gTxt('ied_plugin_code_save') . '</a>' : '';
 
         // Language info. ied_visible_langs is the user's choice of which ones they want to see available.
-        // ied_available_langs is the list of actual, currently-installed langs
+        // ied_available_langs is the list of actual, currently-installed langs.
         $theLang = get_pref('language');
         $string_count = ($tp_pfx) ? safe_rows('lang, count(*) as count', 'txp_lang', "name like '".$tp_pfx."%' group by lang") : array();
         $ied_listlangs = get_pref('ied_plugin_lang_choose', 'installed');
@@ -1401,84 +1406,170 @@ EOJS
             .'<a class="navlink" name="ied_plugin_btn_phpdoc" id="ied_plugin_btn_phpdoc">' . gTxt('ied_plugin_php_doc') . '</a>';
     */
         $phpdoc = '';
+        $tabCount = $tabActive = 0;
+        $selectedTab = get_pref('pane_' . $this->ied_pc_event . '_visible');
+        $tokenSuffix = $this->ied_pc_event . form_token() . get_pref('blog_uid');
+        $panelSet = array(
+            0 => 'meta',
+            1 => 'code',
+            2 => 'pack',
+            3 => 'docs',
+            );
+
+        $switcherList = array();
+
+        foreach ($panelSet as $tabId => $panel) {
+            $switcherList[] = '<li><a href="#options_group_'.$panel.'" data-txp-pane="'.$panel.'" data-txp-token="' . md5($panel.$tokenSuffix).'">' . gTxt('ied_plugin_'.$panel.'_legend') . '</a></li>';
+            if ($panel === $selectedTab) {
+                $tabActive = $tabCount;
+            }
+
+            $tabCount++;
+        }
 
         echo
-            hed(gTxt('ied_plugin_edit', array('{name}' => $name, '{version}' => $version)).n.$vhelplinkfull, 2).
             n. form(
-                '<div id="ied_plugin_sub">'. ($sub).'</div>'
-                .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_meta_visible') ? ' expanded' : '').'"><a href="#ied_plugin_meta">' . gTxt('ied_plugin_meta_legend') . '</a></h3><div id="ied_plugin_meta" class="toggle" style="display:'.(get_pref('pane_ied_plugin_meta_visible') ? 'block' : 'none').'">'
-                .n. '<p><label>' . gTxt('name') . '</label>' . sp . $newname . sp. '<label>' . gTxt('version') . '</label>' . sp . $version_widget . $plugstatus . ( ($filename) ? tag(sp.sp.'('.$filename.')','span',' style="color:gray;"').hInput('filename',$filename) : '' ) . '</p>'
-                .n. '<p><label>' . gTxt('description') . '</label>' . sp . $description_widget . '</p>'
-                .n. '<p><label>' . gTxt('author') . '</label>' . sp . $author_widget . sp. '<label>' . gTxt('website') . '</label>' .sp. $author_uri_widget. '</p>'
-                .n. '<p><label>' . gTxt('ied_plugin_type') . '</label>' . sp . $plugtype . '</p>'
-                .n. '<p><label>' . gTxt('ied_plugin_flags') . '</label>' . sp . $flaglist .sp. '<label>' . gTxt('ied_plugin_load_order') . '</label>' . sp . $plugorder . sp.sp . gTxt('ied_plugin_load_order_help') . '</p>'
-                .n. '</div></div>'
+                hed(gTxt('ied_plugin_edit', array('{name}' => $name, '{version}' => $version)).n.$vhelplinkfull, 1, array('class' => 'txp-heading'))
+                .n. '<div class="txp-layout-4col-cell-1alt" id="ied_edit_switcher" role="region">'
+                .n. '<section class="txp-details" id="all_options" aria-labelledby="all_options-label">'
+                .n. '<h3 id="all_options-label">Panels</h3>'
+                .n. '<div role="group">'
+                .n. '<ul class="switcher-list">'
+                .join(n, $switcherList)
+                .n. '</ul>'
+                .n. '</div>'
+                .n. '</section>'
+                .n. $sub
+                .n. '<section class="txp-prefs-group" id="options_group_dist" aria-labelledby="options_group_dist-label">'
+                .n. hed(gTxt('ied_plugin_utils_legend'), 2, array('id' => 'options_group_dist-label'))
+                .n. (($distblock) ? '<div>' . $distribution . '</div>' : '')
+                .n. '<div class="txp-form-field txp-form-field-textarea">'
+                .n. '<div class="txp-form-field-label"><label for="ied_plugin_tp_oplangs">' . gTxt('ied_plugin_lang_choose') . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . join(n, $op_langs) . '</div>'
+                .n. '</div>'
+                .n. '<ul>'
+                .n. '<li>' . $slink . '</li>'
+                .n. '<li>' . $sziplink . '</li>'
+                .n. '<li>' . $stxtlink . '</li>'
+                .n. '<li>' . $sphplink . '</li>'
+                .n. '</ul>'
+                .n. '</section>'
+                .n. '</div>'
 
-                .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_code_visible') ? ' expanded' : '').'"><a href="#ied_plugin_code">'.gTxt('ied_plugin_code_legend').'</a></h3><div id="ied_plugin_code" class="toggle" style="display:'.(get_pref('pane_ied_plugin_code_visible') ? 'block' : 'none').'">'
+                .n. '<div class="txp-layout-4col-cell-2-3-4" id="ied_edit_content" role="region">'
+                .n. '<section class="txp-prefs-group" id="options_group_meta" aria-labelledby="options_group_meta-label">'
+                .n. hed(gTxt('ied_plugin_meta_legend'), 2, array('id' => 'options_group_meta-label'))
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label for="newname">' . gTxt('name') . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . $newname . '</div>'
+                .n. '</div>'
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label for="version">' . gTxt('version') . '</label></div>'
+                .n. '<div class="txp-form-field-value">'
+                .n. $version_widget
+                .n. $plugstatus
+                .n. (($filename) ? tag(sp.sp.'('.$filename.')','span',' style="color:gray;"').hInput('filename', $filename) : '')
+                .n. '</div>'
+                .n. '</div>'
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label for="description">' . gTxt('description') . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . $description_widget . '</div>'
+                .n. '</div>'
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label for="author">' . gTxt('author') . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . $author_widget . '</div>'
+                .n. '</div>'
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label for="author_uri">' . gTxt('website') . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . $author_uri_widget . '</div>'
+                .n. '</div>'
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label for="type">' . gTxt('ied_plugin_type') . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . $plugtype . '</div>'
+                .n. '</div>'
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label>' . gTxt('ied_plugin_flags')  . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . $flaglist . '</div>'
+                .n. '</div>'
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label>' . gTxt('ied_plugin_load_order') . gTxt('ied_plugin_load_order_help') . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . $plugorder . '</div>'
+                .n. '</div>'
+                .n. '</section>'
+
+                .n. '<section class="txp-prefs-group" id="options_group_code" aria-labelledby="options_group_code-label">'
+                .n. hed(gTxt('ied_plugin_code_legend'), 2, array('id' => 'options_group_code-label'))
                 .n. '<span class="ied_plugin_edit_toolbar">' . $msgpop . $phpdoc . sp . $codesub . '</span>'
-                .n. '<div>' . $codeblock . '</div>'
-                .n. '</div></div>'
+                .n. '<div class="txp-form-field txp-form-field-textarea">'
+                .n. '<div class="txp-form-field-label"><label for="plugin_editor">PHP</label></div>'
+                .n. '<div class="txp-form-field-value">' . $codeblock . '</div>'
+                .n. '</div>'
+                .n. '</section>'
 
-                .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_tp_strings_visible') ? ' expanded' : '').'"><a href="#ied_plugin_tp_strings">' . gTxt('ied_plugin_tp_legend') . ' <span id="ied_plugin_tp_count"></span></a></h3><div id="ied_plugin_tp_strings" class="toggle" style="display:'.(get_pref('pane_ied_plugin_tp_strings_visible') ? 'block' : 'none').'">'
-                .n. '<div id="ied_plugin_tp_controls">'
-                .n. '<label>'
-                .n. gTxt('ied_plugin_tp_prefix')
-                .n. '</label>'
+                .n. '<section class="txp-prefs-group" id="options_group_pack" aria-labelledby="options_group_pack-label">'
+                .n. hed(gTxt('ied_plugin_pack_legend'), 2, array('id' => 'options_group_pack-label'))
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label for="ied_plugin_tp_prefix">' . gTxt('ied_plugin_tp_prefix') . '</label></div>'
+                .n. '<div class="txp-form-field-value">'
                 .n. fInput('text', 'ied_plugin_tp_prefix', $tp_pfx, '', '', '', '', '', 'ied_plugin_tp_prefix')
-                .n. sp
                 .n. $langsel
-                .n. sp
                 .n. fInput('hidden', 'ied_plugin_tp_lang_dflt', $dflt_lang, '', '', '', '', '', 'ied_plugin_tp_lang_dflt')
-                .n. gTxt('ied_plugin_tp_populate').n.'</label>'.fInput('text', 'ied_plugin_tp_populate', '', '', '', '', '', '', 'ied_plugin_tp_populate') . sp . '<button id="ied_plugin_tp_load">'.gTxt('go').'</button>'
+                .n. '</div>'
+                .n. '</div>'
+                .n. '<div class="txp-form-field">'
+                .n. '<div class="txp-form-field-label"><label>' . gTxt('ied_plugin_tp_populate')  . '</label></div>'
+                .n. '<div class="txp-form-field-value">'
+                .n. fInput('text', 'ied_plugin_tp_populate', '', '', '', '', '', '', 'ied_plugin_tp_populate')
+                .n. '<button id="ied_plugin_tp_load">' . gTxt('go') . '</button>'
                 .n. '<span id="ied_plugin_tp_load_count"></span>'
+                .n. '</div>'
                 .n. '</div>'
                 .n. '<a href="#" id="ied_plugin_add_string">+</a>'
                 .n. '<ul>'
                 .n. join(n, $tp_strings)
-                .n. '</ul></div></div>'
+                .n. '</ul>'
+                .n. '</section>'
 
-                .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_docs_visible') ? ' expanded' : '').'"><a href="#ied_plugin_docs">'.gTxt('ied_plugin_docs_legend').'</a></h3><div id="ied_plugin_docs" class="toggle" style="display:'.(get_pref('pane_ied_plugin_docs_visible') ? 'block' : 'none').'">'
-                .n. '<div>' . $help_widget . '</div>'
-                .n. (($styleblock) ? '<div>' . gTxt( 'css' ) . $css_widget . '</div>' : '')
-                .n. '</div></div>'
-                .n. '<div>' . $sub . '</div>'
-
-                .n. '<div class="summary-details"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_utils_visible') ? ' expanded' : '').'"><a href="#ied_plugin_utils">'.gTxt('ied_plugin_utils_legend').'</a></h3><div id="ied_plugin_utils" class="toggle" style="display:'.(get_pref('pane_ied_plugin_utils_visible') ? 'block' : 'none').'">'
-                .n. (($distblock) ? '<div>' . gTxt('ied_plugin_code_dist') . $distribution . '</div>' : '')
-                .n. '<div>' . join(n, $op_langs) . '</div>'
-                .n. '<div>' . $slink . '</div>'
-                .n. '<div>' . $sziplink . '</div>'
-                .n. '<div>' . $stxtlink . '</div>'
-                .n. '<div>' . $sphplink . '</div>'
-                .n. '</div></div>'
-
+                .n. '<section class="txp-prefs-group" id="options_group_docs" aria-labelledby="options_group_docs-label">'
+                .n. hed(gTxt('ied_plugin_docs_legend'), 2, array('id' => 'options_group_docs-label'))
+                .n. '<div class="txp-form-field txp-form-field-textarea">'
+                .n. '<div class="txp-form-field-label"><label for="plugin_help">' . gTxt('text') . '</label></div>'
+                .n. '<div class="txp-form-field-value">' . $help_widget . '</div>'
+                .n. '</div>'
+                .n. (($styleblock)
+                        ? '<div class="txp-form-field txp-form-field-textarea">'
+                            . '<div class="txp-form-field-label"><label for="plugin_help_css">' . gTxt('css') . '</label></div>'
+                            . '<div class="txp-form-field-value">' . $css_widget . '</div>'
+                            . '</div>'
+                        : '')
+                .n. '</section>'
+                .n. '</div>'
                 .n. sInput('save')
                 .n. eInput($this->ied_pc_event)
                 .n. hInput('name',$name)
-            , '', '', 'post', 'ied_editForm').
+            , '', '', 'post', 'ied-edit-form').
             script_js(<<<EOJS
+    var selectedTab = '{$tabActive}';
+    var iedPluginGroup = $('.ied-edit-form');
+    var iedPluginTabs = iedPluginGroup.find('.switcher-list li');
+
+    iedPluginGroup.tabs({active: selectedTab}).removeClass('ui-widget ui-widget-content ui-corner-all').addClass('ui-tabs-vertical');
+    iedPluginGroup.find('.switcher-list').removeClass('ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all');
+    iedPluginTabs.removeClass('ui-state-default ui-corner-top');
+    iedPluginGroup.find('.txp-prefs-group').removeClass('ui-widget-content ui-corner-bottom');
+
+    iedPluginTabs.on('click', 'a', function(ev) {
+        var me = $(this);
+        sendAsyncEvent({
+                event   : 'pane',
+                step    : 'tabVisible',
+                pane    : me.data('txp-pane'),
+                origin  : textpattern.event,
+                token   : me.data('txp-token')
+            });
+    });
+
     var ied_plugin_tp_total = 0;
-    jQuery.fn.ied_plugin_resizehandle = function(curh) {
-        return this.each(function () {
-            var me = jQuery(this);
-            me.animate({height: curh});
-            me.after(
-                jQuery('<div class="ied_plugin_resizehandle">--- + ---</div>').bind("mousedown", function (e) {
-                    var h = me.height();
-                    var y = e.clientY;
-                    var moveHandler = function (e) {
-                        me.height(Math.max(20, e.clientY + h - y));
-                    };
-                    var upHandler = function (e) {
-                        jQuery("html").unbind("mousemove",moveHandler).unbind("mouseup",upHandler);
-                        newh = me.height();
-                        setCookie('ied_plugin_edheight', newh, 365);
-                    };
-                    jQuery("html").bind("mousemove", moveHandler).bind("mouseup", upHandler);
-                })
-            );
-        });
-    };
 
     jQuery.fn.selectRange = function(start, end) {
         return this.each(function() {
@@ -1576,7 +1667,7 @@ EOJS
     {
         var tp_count = tp_warns = tp_has_content = 0;
 
-        jQuery('#ied_plugin_tp_strings ul li').each(function() {
+        jQuery('#options_group_pack ul li').each(function() {
             var self = jQuery(this);
             tp_count++;
             if (self.find('input').val() !== '') {
@@ -1596,7 +1687,6 @@ EOJS
     jQuery(function () {
         curh = getCookie('ied_plugin_edheight');
         curh = (curh == null) ? '480' : curh;
-        jQuery("#plugin_editor").ied_plugin_resizehandle(parseInt(curh));
         jQuery('textarea[maxlength]').keyup(function () {
             var max = parseInt(jQuery(this).attr('maxlength'));
             if (jQuery(this).val().length > max) {
@@ -1653,7 +1743,7 @@ EOJS
 
                 // List of all current textpack strings in use (as of last Save operation)
                 var ied_tp_curr = [];
-                jQuery('#ied_plugin_tp_strings label').each(function () {
+                jQuery('#options_group_pack ul label').each(function () {
                     ied_tp_curr[ied_tp_curr.length] = jQuery(this).text();
                 });
 
@@ -1662,16 +1752,16 @@ EOJS
                 for (var idx = 0; idx < ied_tp_curr.length; idx++) {
                     if ((pos = jQuery.inArray(ied_tp_curr[idx], ied_tp_used)) > -1) {
                         ied_tp_used.splice(pos, 1);
-                        jQuery('#ied_plugin_tp_strings ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', false).next(".ied_plugin_xbtn").remove();
+                        jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', false).next(".ied_plugin_xbtn").remove();
                     } else {
                         setclass = 1;
-                        jQuery('#ied_plugin_tp_strings ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', true).next(".ied_plugin_xbtn").remove().end().after('<a href="#" class="ied_plugin_xbtn">[x]</a>');
+                        jQuery('#options_group_pack ul label:contains('+ied_tp_curr[idx]+')').toggleClass('warning', true).next(".ied_plugin_xbtn").remove().end().after('<a href="#" class="ied_plugin_xbtn">[x]</a>');
                     }
                 }
                 // For each remaining item that has been used, add an input box
                 // TODO: i18n the select options
                 for (var idx = 0; idx < ied_tp_used.length; idx++) {
-                    jQuery('#ied_plugin_tp_strings ul').prepend('<li><input type="text" name="textpack_'+ied_tp_used[idx]+'" value="" /> <select name="ied_plugin_tp_event"><option value="admin">Admin</option><option value="public">Public</option><option value="common">Both</option></select> <label>'+ied_tp_used[idx]+'</label></li>');
+                    jQuery('#options_group_pack ul').prepend('<li><input type="text" name="textpack_'+ied_tp_used[idx]+'" value="" /> <select name="ied_plugin_tp_event"><option value="admin">Admin</option><option value="public">Public</option><option value="common">Both</option></select> <label>'+ied_tp_used[idx]+'</label></li>');
                 }
                 ied_plugin_update_tp_count();
             }
@@ -1679,14 +1769,14 @@ EOJS
 
         // Handle adding new strings manually
         jQuery('#ied_plugin_add_string').click(function (ev) {
-            jQuery('#ied_plugin_tp_strings ul').before('<div id="ied_plugin_new_container"><label>'+jQuery('#ied_plugin_tp_prefix').val()+'_<input type="text" name="ied_plugin_tp_newname" id="ied_plugin_tp_newname" value="" /></label></div>');
+            jQuery('#options_group_pack ul').before('<div id="ied_plugin_new_container"><label>'+jQuery('#ied_plugin_tp_prefix').val()+'_<input type="text" name="ied_plugin_tp_newname" id="ied_plugin_tp_newname" value="" /></label></div>');
             jQuery('#ied_plugin_tp_newname').focus();
             ev.preventDefault();
         });
         jQuery(document).on('blur', '#ied_plugin_tp_newname', function () {
             var newname = ied_plugin_rtrim(jQuery('#ied_plugin_tp_prefix').val()+'_'+jQuery('#ied_plugin_tp_newname').val(), '_');
             var newok = true;
-            jQuery('#ied_plugin_tp_strings ul li label').each(function () {
+            jQuery('#options_group_pack ul li label').each(function () {
                 if (jQuery(this).text() == newname) {
                     jQuery('#ied_plugin_tp_newname').css('color', '#E00');
                     newok = false;
@@ -1694,7 +1784,7 @@ EOJS
             });
             // TODO: i18n select option text
             if (newok) {
-                jQuery('#ied_plugin_tp_strings ul').prepend('<li><input type="text" name="textpack_'+newname+'" value="" /> <select name="ied_plugin_tp_event"><option value="admin">Admin</option><option value="public">Public</option><option value="common">Both</option></select> <label>'+newname+'</label></li>');
+                jQuery('#options_group_pack ul').prepend('<li><input type="text" name="textpack_'+newname+'" value="" /> <select name="ied_plugin_tp_event"><option value="admin">Admin</option><option value="public">Public</option><option value="common">Both</option></select> <label>'+newname+'</label></li>');
                 jQuery('#ied_plugin_new_container').remove();
                 jQuery('input[name="textpack_'+newname+'"]').focus();
             }
@@ -1770,8 +1860,8 @@ EOJS
         }
 
         // Handle saving textpack string
-        jQuery(document).on('blur', '#ied_plugin_tp_strings ul li input', ied_plugin_tp_save);
-        jQuery(document).on('change', '#ied_plugin_tp_strings ul li select', ied_plugin_tp_save);
+        jQuery(document).on('blur', '#options_group_pack ul li input', ied_plugin_tp_save);
+        jQuery(document).on('change', '#options_group_pack ul li select', ied_plugin_tp_save);
 
         // Handle language change
         jQuery("#ied_plugin_tp_lang").change(function (event) {
@@ -1779,7 +1869,7 @@ EOJS
 
             var tp_lng = jQuery(this).val();
             var tp_dflt = jQuery('#ied_plugin_tp_lang_dflt').val();
-            var sel = '#ied_plugin_tp_strings ul li';
+            var sel = '#options_group_pack ul li';
             var numStrings = sel.length;
             var numFetched = 0;
 
@@ -1829,7 +1919,7 @@ EOJS
             var ied_fn = jQuery("#ied_plugin_tp_populate").val();
 
 
-            jQuery('#ied_plugin_tp_strings ul li').each(function () {
+            jQuery('#options_group_pack ul li').each(function () {
                 var obj = jQuery(this);
                 var tp_lbl = obj.find('label').text();
                 var tp_dest = obj.find('input');
@@ -3413,6 +3503,8 @@ EOJS
     // -------------------------------------------------------------
     public function textpack_save()
     {
+        global $DB;
+
         $lbl = doSlash(gps('ied_tp_lbl'));
         $str = doSlash(gps('ied_tp_str'));
         $lng = doSlash(gps('ied_tp_lng'));
@@ -3420,7 +3512,7 @@ EOJS
 
         $where = "name='$lbl' AND lang='$lng'";
         $ret = safe_update('txp_lang', "data='$str', event='$evt'", $where);
-        if ($ret && (mysql_affected_rows() or safe_count('txp_lang', $where))) {
+        if ($ret && (mysqli_affected_rows($DB->link) || safe_count('txp_lang', $where))) {
             // Update OK: do nothing else
         } else {
             $ret = safe_insert('txp_lang', "name='$lbl', lang='$lng', event='$evt', data='$str'");
@@ -4321,7 +4413,7 @@ Plus help from a host of forum contributors too numerous to mention. You know wh
 <h2 id="changelog">Changelog</h2>
 
 <ul>
-	<li>XX <span class="caps">YYY</span> 2016 | 1.1.0 | Added Textpack string counter; permitted constants in plugin template declarations; fixed bogus javascript code output; fixed resize handler <span class="caps">CSS</span>. Restructured internals for performance; layout and workflow improvements</li>
+	<li>XX <span class="caps">YYY</span> 2016 | 1.1.0 | Added Textpack string counter; permitted constants in plugin template declarations; fixed bogus javascript code output; removed resize handler. Restructured internals for performance; layout and workflow improvements</li>
 	<li>25 Jul 2014 | 1.06 | Added <code>escape</code> attribute to ied_plugin_download_link tag</li>
 	<li>21 Oct 2013 | 1.05 | More sensible default for lang export from ied_plugin_download_link tag</li>
 	<li>15 Oct 2013 | 1.04 | Fixed bug preventing help being packaged in downloaded plugin from public side</li>
