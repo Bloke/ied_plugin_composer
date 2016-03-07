@@ -3235,11 +3235,12 @@ EOJS;
      * Wrap the passed widget with standard markup.
      *
      * @param  string $widget The widget to wrap
+     * @param  string $class  The CSS class to apply to the wrapper
      * @return string         HTML
      */
-    public function wrap_widget($widget)
+    public function wrap_widget($widget, $class = 'txp-form-field-value')
     {
-        return '<span class="edit-value">'.$widget.'</span>';
+        return '<div class="' . $class . '">'.$widget.'</div>';
     }
 
     /**
@@ -3274,7 +3275,9 @@ EOJS;
 
         $btnSave = fInput('submit', 'submit', gTxt('save'), 'publish');
 
-        echo '<h1 class="txp-heading">' . gTxt('ied_plugin_lbl_setup') . '</h1>'.
+        echo '<div class="txp-layout-2col-cell-1">' .
+            '<h1 class="txp-heading">' . gTxt('ied_plugin_lbl_setup') . '</h1>'.
+            '</div>'.
             script_js(<<<EOJS
 var ied_plugin_path_re = new RegExp("^.*[/\\]", "g")
 function ied_plugin_prefswap(selID, selValue)
@@ -3307,8 +3310,8 @@ EOJS
             );
 
         $out = array();
-        $out[] = n.'<div class="plugin-column">';
-        $out[] = '<form name="ied_pc_prefs" id="ied_pc_prefs" action="index.php" method="post">';
+        $out[] = n.'<div class="txp-layout-1col">';
+        $out[] = '<form name="ied_pc_prefs" id="ied_pc_prefs" class="txp-prefs-group" action="index.php" method="post">';
         $out[] = eInput($this->ied_pc_event).sInput('prefs');
 
         $last_grp = '';
@@ -3319,17 +3322,18 @@ EOJS
             }
             $last_grp = $prefobj['group'];
             $subout = array();
-            $label = '<span class="edit-label">'
+            $label = '<div class="txp-form-field-label">'
                     .'<label>'.gTxt($idx).'</label>'
-                    .'</span>';
+                    .'</div>';
             $val = get_pref($idx, $prefobj['default'], 1);
-            $vis = (isset($prefobj['visible']) && !$prefobj['visible']) ? 'empty' : '';
+            $vis = (isset($prefobj['visible']) && !$prefobj['visible']) ? 'empty' : 'txp-form-field';
             switch ($prefobj['html']) {
                 case 'text_input':
                     $subout[] = $this->wrap_widget(fInput('text', $idx, $val, '', '', '', INPUT_REGULAR, '', $idx));
                 break;
                 case 'textarea':
-                    $subout[] = text_area($idx, '', '', $val, $idx);
+                    $subout[] = $this->wrap_widget(text_area($idx, '', '', $val, $idx));
+                    $vis = (isset($prefobj['visible']) && !$prefobj['visible']) ? 'empty' : 'txp-form-field-textarea';
                 break;
                 case 'yesnoradio':
                     $subout[] = $this->wrap_widget(yesnoRadio($idx, $val));
@@ -3340,10 +3344,15 @@ EOJS
                 case 'checkboxset':
                     $vals = do_list($val);
                     $lclout = array();
+                    $cb_count = 0;
+
                     foreach ($prefobj['content'] as $cb => $val) {
                         $checked = in_array($cb, $vals);
-                        $lclout[] = checkbox($idx.'[]', $cb, $checked). '<label>' . gTxt($val) . '</label>';
+                        $cbId = txpspecialchars($idx.'-'.$cb_count);
+                        $lclout[] = checkbox($idx . '[]', $cb, $checked, '', $cbId) . n . '<label for="' . $cbId . '">' . gTxt($val) . '</label>';
+                        $cb_count++;
                     }
+
                     $subout[] = $this->wrap_widget(implode(n, $lclout));
                 break;
                 case 'selectlist':
@@ -3355,9 +3364,9 @@ EOJS
                     }
                 break;
             }
-            $out[] = graf($label . n.implode(n ,$subout), ($vis ? ' class="'.$vis.'"' : ''));
+            $out[] = tag($label . n.implode(n ,$subout), 'div', ($vis ? ' class="'.$vis.'"' : ''));
         }
-        $out[] = graf(fInput('submit', 'ied_plugin_pref_save', gTxt('save'), 'publish'));
+        $out[] = graf(fInput('submit', 'ied_plugin_pref_save', gTxt('save'), 'publish'), array('class' => 'txp-save'));
         $out[] = tInput();
         $out[] = '</form></div>';
 
@@ -3381,7 +3390,7 @@ EOJS
         foreach ($ied_plugin_prefs as $key => $prefobj) {
             $val = ($saved || isset($_POST[$key])) ? ps($key) : ((isset($prefs[$key])) ? $prefs[$key] : $prefobj['default']);
             $val = (is_array($val)) ? implode(', ', $val) : $val;
-            set_pref($key, doSlash($val), 'ied_plugin', $prefobj['type'], $prefobj['html'], $prefobj['position']);
+            set_pref($key, $val, 'ied_plugin', $prefobj['type'], $prefobj['html'], $prefobj['position']);
         }
     }
 
