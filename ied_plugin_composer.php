@@ -104,6 +104,7 @@ ied_plugin_langs_all => All available
 ied_plugin_langs_installed => Only installed
 ied_plugin_lang_choose => Textpack language list
 ied_plugin_lang_default => Default textpack language
+ied_plugin_list => Plugin list
 ied_plugin_lbl_lc_delete => Delete
 ied_plugin_lbl_lc_disable => Disable
 ied_plugin_lbl_lc_disdel => Disable+Delete
@@ -213,6 +214,7 @@ ied_plugin_langs_all => Toutes disponibles
 ied_plugin_langs_installed => Seulement installées
 ied_plugin_lang_choose => Liste des traductions (Textpack)
 ied_plugin_lang_default => Langue par défaut (Textpack)
+ied_plugin_list => 
 ied_plugin_lbl_lc_delete => Supprimer
 ied_plugin_lbl_lc_disable => Désactiver
 ied_plugin_lbl_lc_enable => Activer
@@ -619,7 +621,7 @@ class ied_pc
         $ied_pc_styles = array(
             'ied_plugin' => '
 .ied_label { margin:0 0.2em 0 0.6em;}
-.setup { float:right; }
+.ied_plugin_link { float:right; }
 .ied_plugin_info_bar { text-align:right; }
 #ied_plugin_jumpToLine { width:4em; margin:0 1em 0 0.4em; }
 .ied_editForm { width:{edwidth}; margin:0 auto; }
@@ -784,7 +786,7 @@ class ied_pc
             n. '<h1 class="txp-heading">'.gTxt('ied_plugin_composer').sp.$this->anchor($this->ied_pc_event, 'help_viewer', '?', array('name' => 'ied_plugin_composer'), array('class' => 'pophelp')).'</h1>'.
             n. '</div>'.
             n. '<div id="ied_plugin_control" class="txp-layout-2col-cell-2">'.
-            n. sLink($this->ied_pc_event, 'prefs', gTxt('ied_plugin_setup'), 'setup').
+            n. sLink($this->ied_pc_event, 'prefs', gTxt('ied_plugin_setup'), 'ied_plugin_link').
             n. '</div>'.
             n. '<div class="summary-details clear"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_cpanel_visible') ? ' expanded' : '').'"><a href="#ied_plugin_cpanel">' . gTxt('ied_plugin_cpanel_legend') . '</a></h3><div id="ied_plugin_cpanel" class="toggle" style="display:'.(get_pref('pane_ied_plugin_cpanel_visible') ? 'block' : 'none').'">'.
             n. '<form class="ied_plugin_form" enctype="multipart/form-data" action="index.php" method="post">'.
@@ -1475,7 +1477,12 @@ EOJS
 
         echo
             n. form(
-                hed(gTxt('ied_plugin_edit', array('{name}' => $name, '{version}' => $version)).n.$vhelplinkfull, 1, array('class' => 'txp-heading'))
+                '<div class=txp-layout-2col-cell-1>'
+                .n. hed(gTxt('ied_plugin_edit', array('{name}' => $name, '{version}' => $version)), 1, array('class' => 'txp-heading'))
+                .n. '</div>'
+                .n. '<div class=txp-layout-2col-cell-2>'
+                .n. sLink($this->ied_pc_event, '', gTxt('ied_plugin_list'), 'ied_plugin_link')
+                .n. '</div>'
                 .n. '<div class="txp-layout-4col-cell-1alt" id="ied_edit_switcher" role="region">'
                 .n. '<section class="txp-details" id="all_options" aria-labelledby="all_options-label">'
                 .n. '<h3 id="all_options-label">Panels</h3>'
@@ -1579,7 +1586,7 @@ EOJS
                 .n. '</section>'
 
                 .n. '<section class="txp-prefs-group" id="options_group_docs" aria-labelledby="options_group_docs-label">'
-                .n. hed(gTxt('ied_plugin_docs_legend'), 2, array('id' => 'options_group_docs-label'))
+                .n. hed(gTxt('ied_plugin_docs_legend') . n . $vhelplinkfull, 2, array('id' => 'options_group_docs-label'))
                 .n. '<div class="txp-form-field txp-form-field-textarea">'
                 .n. '<div class="txp-form-field-label"><label for="plugin_help">' . gTxt('text') . '</label></div>'
                 .n. '<div class="txp-form-field-value">' . $help_widget . '</div>'
@@ -3275,10 +3282,13 @@ EOJS;
 
         $btnSave = fInput('submit', 'submit', gTxt('save'), 'publish');
 
-        echo '<div class="txp-layout-2col-cell-1">' .
-            '<h1 class="txp-heading">' . gTxt('ied_plugin_lbl_setup') . '</h1>'.
-            '</div>'.
-            script_js(<<<EOJS
+        echo '<div class="txp-layout-2col-cell-1">'
+            .n. '<h1 class="txp-heading">' . gTxt('ied_plugin_lbl_setup') . '</h1>'
+            .n. '</div>'
+            .n. '<div class=txp-layout-2col-cell-2>'
+            .n. sLink($this->ied_pc_event, '', gTxt('ied_plugin_list'), 'ied_plugin_link')
+            .n. '</div>'
+            .n. script_js(<<<EOJS
 var ied_plugin_path_re = new RegExp("^.*[/\\]", "g")
 function ied_plugin_prefswap(selID, selValue)
 {
