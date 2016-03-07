@@ -131,6 +131,7 @@ ied_plugin_output_sfilec => Export compressed filename format
 ied_plugin_output_sfilep => Plugin template filename format
 ied_plugin_output_sfilet => Textpack filename format
 ied_plugin_output_tmpcache => Cache Textiled help path
+ied_plugin_pack_legend => Textpack strings
 ied_plugin_php_doc => Make phpdoc
 ied_plugin_prefs => Preferences
 ied_plugin_prefs_deleted => Preferences deleted
@@ -148,7 +149,6 @@ ied_plugin_setup => Setup
 ied_plugin_syntax_check => Syntax check on code save
 ied_plugin_syntax_err => Syntax error
 ied_plugin_toggle => Toggle
-ied_plugin_pack_legend => Textpack strings
 ied_plugin_tp_populate => Load strings from function
 ied_plugin_tp_prefix => Textpack prefix
 ied_plugin_type => Plugin type
@@ -236,6 +236,7 @@ ied_plugin_output_sfilec => Noms des fichiers compressés
 ied_plugin_output_sfilep => Noms des fichiers Plugin
 ied_plugin_output_sfilet => Noms des fichiers Textpack
 ied_plugin_output_tmpcache => Chemin du cache de l'aide sous Textile
+ied_plugin_pack_legend => Chaînes du Textpack
 ied_plugin_php_doc => Créer un phpdoc
 ied_plugin_prefs => Préférences
 ied_plugin_prefs_deleted => Préférences supprimées
@@ -252,7 +253,6 @@ ied_plugin_save_as => Sauver sous {name}
 ied_plugin_setup => Configuration
 ied_plugin_syntax_check => Vérifier la syntaxe du code avant sauvegarde
 ied_plugin_syntax_err => Erreur de syntaxe
-ied_plugin_pack_legend => Chaînes du Textpack
 ied_plugin_tp_populate => Essayer de charger les chaînes depuis la fonction
 ied_plugin_tp_prefix => Préfixe du Textpack
 ied_plugin_type => Type de plugin
@@ -348,20 +348,20 @@ if (txpinterface === 'admin') {
             $sql = array();
             $sql[] = '1';
             if ($name) {
-                $sql[] = "name IN ('".join("','", doSlash($names))."')";
+                $sql[] = "name IN ('".implode("','", doSlash($names))."')";
             }
             if ($prefix) {
                 $sqlor = array();
                 foreach ($prefixes as $pfx) {
                     $sqlor[] = "name LIKE '".doSlash($pfx)."%'";
                 }
-                $sql[] = '(' . join(' OR ', $sqlor) . ')';
+                $sql[] = '(' . implode(' OR ', $sqlor) . ')';
             }
             if ($exclude) {
-                $sql[] = "name NOT IN ('".join("','", doSlash($excludes))."')";
+                $sql[] = "name NOT IN ('".implode("','", doSlash($excludes))."')";
             }
 
-            $rs = safe_rows('*', 'txp_plugin', join(' AND ', $sql) . ' ORDER BY name');
+            $rs = safe_rows('*', 'txp_plugin', implode(' AND ', $sql) . ' ORDER BY name');
         }
 
         // TODO: Add the meta data from matching plugins in the cache directory
@@ -382,7 +382,7 @@ if (txpinterface === 'admin') {
 
         $ied_plugin_data = $ied_pd_saved;
 
-        return ($wraptag) ? doWrap($out, $wraptag, $break, $class, $breakclass, '', '', $html_id) : join($break, $out);
+        return ($wraptag) ? doWrap($out, $wraptag, $break, $class, $breakclass, '', '', $html_id) : implode($break, $out);
     }
 
     /**
@@ -521,7 +521,7 @@ if (txpinterface === 'admin') {
         $langopt = '';
         if ($lang) {
             $langs = do_list($lang);
-            $langopt = $amp.'lang='.join(',', $langs);
+            $langopt = $amp.'lang='.implode(',', $langs);
         }
 
         $linkName = (empty($form)) ? ((empty($thing)) ? $label : parse($thing)) : parse_form($form);
@@ -618,8 +618,6 @@ class ied_pc
     {
         $ied_pc_styles = array(
             'ied_plugin' => '
-#ied_plugin64 { width:60%; }
-input[type="submit"] { margin:0.3em 0.7em; }
 .ied_label { margin:0 0.2em 0 0.6em;}
 .setup { float:right; }
 .ied_plugin_info_bar { text-align:right; }
@@ -753,14 +751,19 @@ input[type="submit"] { margin:0.3em 0.7em; }
         $ied_plugin_prefs = $this->get_prefs();
 
         $lc_opts = do_list(get_pref('ied_plugin_lifecycle_options'));
+        $checked = in_array('installed', $lc_opts);
         $auto_en = get_pref('ied_plugin_auto_enable');
         $pcd = get_pref('plugin_cache_dir');
 
-        $cbout[] = '<p><label class="ied_label">'.gTxt('ied_plugin_run_install').'</label>';
-        $checked = in_array('installed', $lc_opts);
-        $cbout[] = yesnoradio('ied_plugin_installopts', $checked);
-        $cbout[] = '<label class="ied_label">'.gTxt('ied_plugin_auto_enable').'</label>';
-        $cbout[] = radioset($ied_plugin_prefs['ied_plugin_auto_enable']['content'], 'ied_plugin_autoenable', $auto_en).'</p>';
+        $aeRadio[] = '<p class="ied_plugin_radioset ied_plugin_autoenable txp-layout-2col-cell-1">';
+        $aeRadio[] = '<label class="ied_label">' . gTxt('ied_plugin_auto_enable') . '</label>';
+        $aeRadio[] = radioset($ied_plugin_prefs['ied_plugin_auto_enable']['content'], 'ied_plugin_autoenable', $auto_en);
+        $aeRadio[] = '</p>';
+
+        $ioRadio[] = '<p class="ied_plugin_radioset ied_plugin_installopts txp-layout-2col-cell-2" hidden>';
+        $ioRadio[] = '<label class="ied_label">' . gTxt('ied_plugin_run_install') . '</label>';
+        $ioRadio[] = yesnoradio('ied_plugin_installopts', $checked);
+        $ioRadio[] = '</p>';
 
         extract(gpsa(array('sort', 'dir')));
 
@@ -785,10 +788,12 @@ input[type="submit"] { margin:0.3em 0.7em; }
             n. '</div>'.
             n. '<div class="summary-details clear"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_cpanel_visible') ? ' expanded' : '').'"><a href="#ied_plugin_cpanel">' . gTxt('ied_plugin_cpanel_legend') . '</a></h3><div id="ied_plugin_cpanel" class="toggle" style="display:'.(get_pref('pane_ied_plugin_cpanel_visible') ? 'block' : 'none').'">'.
             n. '<form class="ied_plugin_form" enctype="multipart/form-data" action="index.php" method="post">'.
-            n. '<p>'.
+            n. implode(n, $aeRadio).
+            n. implode(n, $ioRadio).
+            n. '<p class="clear">'.
             n. '<label for="ied_plugin_newname" class="ied_label">'.gTxt('name').'</label>'.
-            n. fInput('text', 'name', '', '', '', '', INPUT_REGULAR, '', 'ied_plugin_newname').
-            n. fInput('submit', 'plugin_create', gTxt('ied_plugin_create_new')).
+            n. fInput('text', 'name', '', '', '', '', INPUT_REGULAR, '', 'ied_plugin_newname', false, false, 'Create a new plugin').
+            n. fInput('submit', 'plugin_create', gTxt('create')).
             n. '</p>'.
             n. '<p>'.
             n. '<label for="ied_plugin_file" class="ied_label">'.gTxt('ied_plugin_upload_php').'</label>'.
@@ -800,7 +805,6 @@ input[type="submit"] { margin:0.3em 0.7em; }
             n. text_area('plugin64', '', '', '', 'ied_plugin64').
             n. fInput('submit', 'plugin_install', gTxt('install')).
             n. '</p>'.
-            n. join(n, $cbout).
             n. eInput($this->ied_pc_event).
             n. sInput('create').
             n. hInput('MAX_FILE_SIZE', 1000000).
@@ -950,7 +954,7 @@ input[type="submit"] { margin:0.3em 0.7em; }
                     ).
                     n. '</thead>'.
                     n. '<tbody>'.
-                    n. join(n, $out).
+                    n. implode(n, $out).
                     n. '</tbody>'.
                     n. endTable().
                     n. '</div>'.
@@ -968,8 +972,29 @@ $(document).ready(function () {
     $('#ied_plugin_db_form').txpMultiEditForm({
         'checkbox' : 'input[name="selected[]"][type=checkbox]'
     });
+
     $('#ied_plugin_cache_form').txpMultiEditForm({
         'checkbox' : 'input[name="selected-cache[]"][type=checkbox]'
+    });
+
+    var ied_io = $('.ied_plugin_installopts');
+
+    $('#ied_plugin_file').change(function() {
+        var fn = $(this).val();
+
+        if (fn.substr(fn.lastIndexOf('.') + 1) === 'txt') {
+            ied_io.show();
+        } else {
+            ied_io.hide();
+        }
+    });
+
+    $('#ied_plugin64').on('blur, keyup', function() {
+        if ($(this).val()) {
+            ied_io.show();
+        } else {
+            ied_io.hide();
+        }
     });
 });
 EOJS
@@ -1036,7 +1061,7 @@ EOJS
         $method = assert_string(ps('edit_method'));
 
         if ($selected && is_array($selected)) {
-            $where = "name IN ('".join("','", doSlash($selected))."')";
+            $where = "name IN ('".implode("','", doSlash($selected))."')";
             $lc_opts = do_list(get_pref('ied_plugin_lifecycle_options'));
 
             switch ($method) {
@@ -1162,7 +1187,7 @@ EOJS
                    }
                     }
 
-                    $done = install_textpack(join(n, $textpack));
+                    $done = install_textpack(implode(n, $textpack));
                 break;
             }
         } else {
@@ -1173,13 +1198,13 @@ EOJS
 
         if ($selected || $selected_cache) {
             if ($method === 'delete') {
-                $message = gTxt('plugin_deleted', array('{name}' => join(', ', array_merge($selected, $selected_cache))));
+                $message = gTxt('plugin_deleted', array('{name}' => implode(', ', array_merge($selected, $selected_cache))));
             } elseif ($method === 'lifecycle') {
-                $message = gTxt('ied_plugin_lc_fired', array('{name}' => join(', ', array_merge($selected, $selected_cache)), '{event}' => join(',', $lc_evs)));
+                $message = gTxt('ied_plugin_lc_fired', array('{name}' => implode(', ', array_merge($selected, $selected_cache)), '{event}' => implode(',', $lc_evs)));
             } elseif ($method === 'textpack') {
                 $message = gTxt('textpack_strings_installed', array('{count}' => $done));
             } else {
-                $message = gTxt('plugin_updated', array('{name}' => join(', ', $selected)));
+                $message = gTxt('plugin_updated', array('{name}' => implode(', ', $selected)));
             }
         }
         $this->table($message);
@@ -1456,7 +1481,7 @@ EOJS
                 .n. '<h3 id="all_options-label">Panels</h3>'
                 .n. '<div role="group">'
                 .n. '<ul class="switcher-list">'
-                .join(n, $switcherList)
+                .implode(n, $switcherList)
                 .n. '</ul>'
                 .n. '</div>'
                 .n. '</section>'
@@ -1467,7 +1492,7 @@ EOJS
                 .n. (($distblock) ? '<div>' . $distribution . '</div>' : '')
                 .n. '<div class="txp-form-field txp-form-field-textarea">'
                 .n. '<div class="txp-form-field-label"><label for="ied_plugin_tp_oplangs">' . gTxt('ied_plugin_lang_choose') . '</label></div>'
-                .n. '<div class="txp-form-field-value">' . join(n, $op_langs) . '</div>'
+                .n. '<div class="txp-form-field-value">' . implode(n, $op_langs) . '</div>'
                 .n. '</div>'
                 .n. '<ul>'
                 .n. '<li>' . $slink . '</li>'
@@ -1549,7 +1574,7 @@ EOJS
                 .n. '</div>'
                 .n. '<a href="#" id="ied_plugin_add_string" class="txp-button">+</a>'
                 .n. '<ul>'
-                .n. join(n, $tp_strings)
+                .n. implode(n, $tp_strings)
                 .n. '</ul>'
                 .n. '</section>'
 
@@ -2104,7 +2129,7 @@ EOJS
                     author_uri = '".$author_uri."',
                     version = '".$version."',
                     description = '".$description."',
-                    help = '".join('',$hout)."',
+                    help = '".implode('',$hout)."',
                     code = '".$code."',
                     flags = ".intval($flags).",
                     ".(($restore_point == 1)? "code_restore = '".$code."'," : '')."
@@ -2356,7 +2381,7 @@ EOJS
                     $lparts = do_list($ln, '-');
                     $country_codes[] = $lparts[0];
                 }
-                $langstr = join('+', array_unique($country_codes));
+                $langstr = implode('+', array_unique($country_codes));
             }
         }
         $textpack = $this->textpack_build($base_name, $force);
@@ -2623,7 +2648,7 @@ EOJS
      *
      * @param  string $plugin The raw base64-encoded/gzipped plugin block
      */
-    public function install($plugin='')
+    public function install($plugin = '')
     {
         if (strpos($plugin, '$plugin=\'') !== false) {
             @ini_set('pcre.backtrack_limit', '1000000');
@@ -2633,15 +2658,14 @@ EOJS
         $plugin = preg_replace('/^#.*$/m', '', $plugin);
 
         if (trim($plugin)) {
-
             $plugin = base64_decode($plugin);
-            if (strncmp($plugin,"\x1F\x8B",2)===0)
+
+            if (strncmp($plugin, "\x1F\x8B", 2) === 0) {
                 $plugin = gzinflate(substr($plugin, 10));
+            }
 
             if ($plugin = @unserialize($plugin)) {
-
                 if (is_array($plugin)) {
-
                     extract($plugin);
 
                     $type  = empty($type)  ? 0 : min(max(intval($type), 0), 5);
@@ -2651,14 +2675,14 @@ EOJS
                     $exists = fetch('name', 'txp_plugin', 'name', $name);
 
                     if (isset($help_raw) && empty($plugin['allow_html_help'])) {
-                            // default: help is in Textile format
-                            include_once txpath.'/lib/classTextile.php';
-                            $textile = new Textile();
-                            $help = $textile->TextileRestricted($help_raw, 0, 0);
+                        // Default: help is in Textile format.
+                        include_once txpath.'/lib/classTextile.php';
+                        $textile = new Textile();
+                        $help = $textile->TextileRestricted($help_raw, 0, 0);
                     }
 
                     // MySQL defaults to set status=1 so we need to explicitly override this if this
-                    // is a fresh installation
+                    // is a fresh installation.
                     $ied_plugin_autoenable = ps('ied_plugin_autoenable');
                     $state = ($ied_plugin_autoenable==1) ? 'status=1,' : ($exists && ($ied_plugin_autoenable==2) ? '' : 'status=0,');
 
@@ -2739,7 +2763,7 @@ EOJS
 
     /**
      * Get plugin (file)name information.
-     * 
+     *
      * Returns an array of (file)names;
      *  1) the standard plugin
      *  2) the compressed plugin
@@ -2945,9 +2969,9 @@ EOJS
             }
         }
         if ($delete) {
-            return array(trim(join("\n", $extracted)), trim(join("\n", $remains)));
+            return array(trim(implode("\n", $extracted)), trim(implode("\n", $remains)));
         } else {
-            return trim(join("\n", $extracted));
+            return trim(implode("\n", $extracted));
         }
     }
 
@@ -3094,7 +3118,7 @@ EOJS
 
         $out[1] = ($css) ? "\n$start_dlm\n$css\n$end_dlm\n" : '';
 
-        return substr(join('', $out), 0, $this->ied_plugin_globals['size_help']+$this->ied_plugin_globals['size_css']);
+        return substr(implode('', $out), 0, $this->ied_plugin_globals['size_help']+$this->ied_plugin_globals['size_css']);
     }
 
     /**
@@ -3125,7 +3149,7 @@ EOJS
                 }
             }
 
-            $jsop = join(n, $jsop);
+            $jsop = implode(n, $jsop);
 
             switch ($editor) {
                 case "tiny_mce":
@@ -3178,7 +3202,7 @@ EOJS;
      * Show plugin help documentation.
      *
      * If raw, will Textile first.
-     * 
+     *
      * @param  string $message [description]
      * @return [type]          [description]
      */
@@ -3320,7 +3344,7 @@ EOJS
                         $checked = in_array($cb, $vals);
                         $lclout[] = checkbox($idx.'[]', $cb, $checked). '<label>' . gTxt($val) . '</label>';
                     }
-                    $subout[] = $this->wrap_widget(join(n, $lclout));
+                    $subout[] = $this->wrap_widget(implode(n, $lclout));
                 break;
                 case 'selectlist':
                     $subout[] = $this->wrap_widget(selectInput($idx, $prefobj['content'][0], $val, $prefobj['content'][1]));
@@ -3331,13 +3355,13 @@ EOJS
                     }
                 break;
             }
-            $out[] = graf($label . n.join(n ,$subout), ($vis ? ' class="'.$vis.'"' : ''));
+            $out[] = graf($label . n.implode(n ,$subout), ($vis ? ' class="'.$vis.'"' : ''));
         }
         $out[] = graf(fInput('submit', 'ied_plugin_pref_save', gTxt('save'), 'publish'));
         $out[] = tInput();
         $out[] = '</form></div>';
 
-        echo join(n, $out);
+        echo implode(n, $out);
     }
 
     /**
@@ -3356,7 +3380,7 @@ EOJS
         // 3) if neither exist, set the plugin default value
         foreach ($ied_plugin_prefs as $key => $prefobj) {
             $val = ($saved || isset($_POST[$key])) ? ps($key) : ((isset($prefs[$key])) ? $prefs[$key] : $prefobj['default']);
-            $val = (is_array($val)) ? join(', ', $val) : $val;
+            $val = (is_array($val)) ? implode(', ', $val) : $val;
             set_pref($key, doSlash($val), 'ied_plugin', $prefobj['type'], $prefobj['html'], $prefobj['position']);
         }
     }
@@ -3431,7 +3455,7 @@ EOJS
 
         if (!$fetch_lang) {
             $fetch_lang = ($force_all === 1)
-                ? join(',', array_keys($this->lang_list('installed')))
+                ? implode(',', array_keys($this->lang_list('installed')))
                 : get_pref('ied_plugin_lang_selected', '');
         }
 
@@ -3506,7 +3530,7 @@ EOJS
             }
         }
 
-        return join(n, $tpout);
+        return implode(n, $tpout);
     }
 
     /**
@@ -3523,7 +3547,7 @@ EOJS
         } else {
             $lang = (empty($lang)) ? get_pref('language', 'en-gb') : $lang;
             $langs = quote_list(do_list($lang));
-            $lang_query = "lang IN (".join(', ', $langs).") AND ";
+            $lang_query = "lang IN (".implode(', ', $langs).") AND ";
         }
 
         return ($prefix) ? safe_rows('name, data, lang, event', 'txp_lang', $lang_query."name LIKE '".doSlash($prefix)."%' ORDER BY event,lang,name") : array();
@@ -3742,7 +3766,7 @@ EOJS
             }
         }
 
-        $update = join(',', $set);
+        $update = implode(',', $set);
         $ret = safe_update('txp_plugin', $update, "name='$plug'");
 
         if ($ret) {
@@ -3963,7 +3987,7 @@ EOJS
 
                 $final = '<pre>';
                 $final .= "/**".br;
-                $final .= " * $name" . ((!empty($fntype['meta'])) ? $fntype['meta'] : '') .t. (($fnType['mod']) ? join(' ', $fnType['mod']).' ' : '') . "Description".br;
+                $final .= " * $name" . ((!empty($fntype['meta'])) ? $fntype['meta'] : '') .t. (($fnType['mod']) ? implode(' ', $fnType['mod']).' ' : '') . "Description".br;
                 $final .= " *".br;
                 $final .= " * Summary goes here".br;
                 $final .= " *".br;
