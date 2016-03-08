@@ -1355,12 +1355,18 @@ EOJS
         $newname = fInput('text', 'newname', $name, '', '', '', INPUT_REGULAR);
         $author_widget = fInput('text', 'author', $author, '', '', '', INPUT_REGULAR);
         $author_uri_widget = fInput('text', 'author_uri', $author_uri, '', '', '', INPUT_REGULAR);
-        $version_widget = fInput('text', 'version', $version, 'input-small', '', '',INPUT_SMALL) .sp. (($editfile) ? checkbox('rename_file', '1', 0, '','rename_file') . ' <label for="rename_file">'.gTxt('ied_plugin_rename_file').'</label>' : checkbox('restore_point', '1', 0, '','restore_point') . ' <label for="restore_point">'.gTxt('ied_plugin_restore_point').'</label>');
+        $version_widget = fInput('text', 'version', $version, 'input-small', '', '',INPUT_SMALL).(($editfile)
+                ? checkbox('rename_file', '1', 0, '','rename_file') .n. '<label for="rename_file">'.gTxt('ied_plugin_rename_file').'</label>'
+                : checkbox('restore_point', '1', 0, '','restore_point') .n. '<label for="restore_point">'.gTxt('ied_plugin_restore_point').'</label>');
         $description_widget = fInput('text', 'description', $description, 'input-xlarge', '', '', INPUT_REGULAR);
         $codeblock = '<textarea name="code" id="plugin_editor" rows="'.INPUT_REGULAR.'" class="code codepress php" maxlength="'.$this->ied_plugin_globals['size_code'].'">'.txpspecialchars($code).'</textarea><div class="ied_plugin_info_bar"><span>'.gTxt('ied_plugin_jump_to_line').'</span><input type="text" id="ied_plugin_jumpToLine" size="5" maxlength="6" /><span class="ied_plugin_charsRemain"></span></div>';
         $help_widget = '<textarea name="help" id="plugin_help" rows="'.INPUT_REGULAR.'" class="mceEditor" maxlength="'.$this->ied_plugin_globals['size_help'].'">'.txpspecialchars($help).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>';
-        $css_widget = ($styleblock) ? '<textarea name="css" id="plugin_help_css" rows="'.INPUT_MEDIUM.'" class="code" maxlength="'.$this->ied_plugin_globals['size_css'].'">'.txpspecialchars($css).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>' : '';
-        $plugstatus = (!$editfile) ? sp.sp.checkbox('status',1,$status, '','status'). ' <label for="status">'.gTxt('ied_plugin_enable').'</label>' : '';
+        $css_widget = ($styleblock)
+            ? '<textarea name="css" id="plugin_help_css" rows="'.INPUT_MEDIUM.'" class="code" maxlength="'.$this->ied_plugin_globals['size_css'].'">'.txpspecialchars($css).'</textarea>' .n. '<div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>'
+            : '';
+        $plugstatus = (!$editfile)
+            ? checkbox('status', 1, $status, '','status') .n. '<label for="status">'.gTxt('ied_plugin_enable').'</label>'
+            : '';
 
         $plugtypes = array(
             '0' => gTxt('ied_plugin_type_0'),
