@@ -614,7 +614,7 @@ class ied_pc
     /**
      * CSS definitions: hopefully kind to themers.
      *
-     * @return string Styel rules
+     * @return string Style rules
      */
     protected function get_style_rules()
     {
