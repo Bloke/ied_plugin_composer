@@ -1401,8 +1401,8 @@ EOJS
         $theLang = get_pref('language');
         $string_count = ($tp_pfx) ? safe_rows('lang, count(*) as count', 'txp_lang', "name like '".$tp_pfx."%' group by lang") : array();
         $ied_listlangs = get_pref('ied_plugin_lang_choose', 'installed');
-        $ied_visible_langs = $this->lang_list($ied_listlangs);
-        $ied_available_langs = ($ied_listlangs == 'installed') ? $ied_visible_langs : $this->lang_list('installed');
+        $ied_visible_langs = self::lang_list($ied_listlangs);
+        $ied_available_langs = ($ied_listlangs == 'installed') ? $ied_visible_langs : self::lang_list('installed');
         $dflt_lang = get_pref('ied_plugin_lang_default', $theLang);
         $dflt_lang = array_key_exists($dflt_lang, $ied_visible_langs) ? $dflt_lang : $theLang;
         $dflt_lang_string_count = 0;
@@ -3425,10 +3425,11 @@ EOJS
      * @param  string $flavour If 'installed' then show only those available, else 'all'
      * @return array
      */
-    public function lang_list($flavour='installed')
+    public static function lang_list($flavour = 'installed')
     {
         $ied_langs = array();
-        if ($flavour == 'installed') {
+
+        if ($flavour === 'installed') {
             // Self-join to get all the installed langs and language strings in one step.
 //            $installed_langs = safe_query('select t1.lang, t2.data from '.PFX.'txp_lang as t1, '.PFX.'txp_lang as t2 WHERE t1.lang = t2.name GROUP BY lang');
             $ied_langs = safe_column('lang', 'txp_lang', '1=1 GROUP BY lang');
@@ -3440,8 +3441,10 @@ EOJS
 
             // Get items from RPC.
             @set_time_limit(5);
+
             if ($client->query('tups.listLanguages', get_pref('blog_uid'))) {
                 $response = $client->getResponse();
+
                 foreach ($response as $language) {
                     $ied_langs[] = $language['language'];
                 }
@@ -3450,6 +3453,7 @@ EOJS
 
         // Build the select list array.
         $langlist = array();
+
         foreach ($ied_langs as $ied_lang) {
             $langlist[$ied_lang] = gTxt($ied_lang);
         }
@@ -3474,7 +3478,7 @@ EOJS
 
         if (!$fetch_lang) {
             $fetch_lang = ($force_all === 1)
-                ? implode(',', array_keys($this->lang_list('installed')))
+                ? implode(',', array_keys(self::lang_list('installed')))
                 : get_pref('ied_plugin_lang_selected', '');
         }
 
@@ -4119,49 +4123,6 @@ EOJS
     }
 
     // ------------------------
-    // List of supported javascript syntax highlighter / code editors
-    // NB: no i18n since these are the names of the projects
-    public function code_editors($name, $val='')
-    {
-        $eds['none'] = gTxt('none');
-        $eds['edit_area'] = 'EditArea';
-        $eds['codemirror'] = 'CodeMirror';
-        $eds['codepress'] = 'CodePress';
-
-        return selectInput($name, $eds, $val, false);
-    }
-
-    // ------------------------
-    // List of supported javascript help editors
-    // NB: no i18n since these are the names of the projects
-    public function help_editors($name, $val='')
-    {
-        $eds['textilee'] = 'Textile';
-        $eds['tiny_mce'] = 'TinyMCE';
-
-        return selectInput($name, $eds, $val, false);
-    }
-
-    // ------------------------
-    // List of language options
-    public function lang_options($name, $val='')
-    {
-        $lngs['installed'] = gTxt('ied_plugin_langs_installed');
-        $lngs['all'] = gTxt('ied_plugin_langs_all');
-
-        return selectInput($name, $lngs, $val, false);
-    }
-
-    // ------------------------
-    // List of language options
-    public function lang_default($name, $val='')
-    {
-        $langs = array_merge(array('' => gTxt('ied_plugin_any')), $this->lang_list('all'));
-
-        return selectInput($name, $langs, $val, false);
-    }
-
-    // ------------------------
     // Settings for the plugin
     public function get_prefs()
     {
@@ -4169,7 +4130,7 @@ EOJS
 
         $ied_pc_prefs = array(
             'ied_plugin_editor' => array(
-                'html'     => array($this, 'code_editors'),
+                'html'     => 'ied_plugin_code_editors',
                 'type'     => PREF_HIDDEN,
                 'position' => 10,
                 'default'  => 'none',
@@ -4197,7 +4158,7 @@ EOJS
                 'group'    => 'ied_plugin_if_settings',
             ),
             'ied_plugin_help_editor' => array(
-                'html'     => array($this, 'help_editors'),
+                'html'     => 'ied_plugin_help_editors',
                 'type'     => PREF_HIDDEN,
                 'position' => 50,
                 'default'  => 'textile',
@@ -4252,14 +4213,14 @@ EOJS
                 'group'    => 'ied_plugin_prefs',
             ),
             'ied_plugin_lang_choose' => array(
-                'html'     => array($this, 'lang_options'),
+                'html'     => 'ied_plugin_lang_options',
                 'type'     => PREF_HIDDEN,
                 'position' => 120,
                 'default'  => 'installed',
                 'group'    => 'ied_plugin_prefs',
             ),
             'ied_plugin_lang_default' => array(
-                'html'     => array($this, 'lang_default'),
+                'html'     => 'ied_plugin_lang_default',
                 'type'     => PREF_HIDDEN,
                 'position' => 130,
                 'default'  => '',
@@ -4311,6 +4272,79 @@ EOJS
         );
 
         return $ied_pc_prefs;
+    }
+}
+
+/**
+ * Add prefs callbacks to global scope, since create_pref() can't take
+ * array/object syntax.
+ *
+ * @see  http://forum.textpattern.com/viewtopic.php?pid=298188#p298188
+ */
+if (txpinterface === 'admin') {
+    /**
+     * List of supported javascript syntax highlighter / code editors.
+     *
+     * NB: no i18n since these are the names of the projects.
+     *
+     * @param  string $name Preference name
+     * @param  string $val  Current preference value
+     * @return string       HTML
+     */
+    function ied_plugin_code_editors($name, $val = '')
+    {
+        $eds['none'] = gTxt('none');
+        $eds['edit_area'] = 'EditArea';
+        $eds['codemirror'] = 'CodeMirror';
+        $eds['codepress'] = 'CodePress';
+
+        return selectInput($name, $eds, $val, false);
+    }
+
+    /**
+     * List of supported javascript help editors.
+     *
+     * NB: no i18n since these are the names of the projects.
+     *
+     * @param  string $name Preference name
+     * @param  string $val  Current preference value
+     * @return string       HTML
+     */
+    function ied_plugin_help_editors($name, $val = '')
+    {
+        $eds['textilee'] = 'Textile';
+        $eds['tiny_mce'] = 'TinyMCE';
+
+        return selectInput($name, $eds, $val, false);
+    }
+
+    /**
+     * List of language options.
+     *
+     * @param  string $name Preference name
+     * @param  string $val  Current preference value
+     * @return string       HTML
+     */
+    function ied_plugin_lang_options($name, $val = '')
+    {
+        $lngs['installed'] = gTxt('ied_plugin_langs_installed');
+        $lngs['all'] = gTxt('ied_plugin_langs_all');
+
+        return selectInput($name, $lngs, $val, false);
+    }
+
+    /**
+     * Complete list of supported languages.
+     *
+     * @param  string $name Preference name
+     * @param  string $val  Current preference value
+     * @return string       HTML
+     */
+    function ied_plugin_lang_default($name, $val = '')
+    {
+        $langs = array_merge(array('' => gTxt('ied_plugin_any')), ied_pc::lang_list('all'));
+
+        return selectInput($name, $langs, $val, false);
     }
 }
 # --- END PLUGIN CODE ---
