@@ -99,7 +99,7 @@ ied_plugin_if_settings => Interface settings
 ied_plugin_install_textpack => Install file's Textpack
 ied_plugin_install_txt => Install from .txt file
 ied_plugin_interface_elems => Optional interface elements
-ied_plugin_jump_to_line => Jump to line:
+ied_plugin_jump_to_line => Jump to line
 ied_plugin_langs_all => All available
 ied_plugin_langs_installed => Only installed
 ied_plugin_lang_choose => Textpack language list
@@ -209,7 +209,7 @@ ied_plugin_if_el_style => Bloc CSS pour l'aide
 ied_plugin_if_settings => Paramètres de l'interface
 ied_plugin_install_txt => Installer depuis un fichier .txt
 ied_plugin_interface_elems => Éléments optionels de l'interface
-ied_plugin_jump_to_line => Aller à la ligne :
+ied_plugin_jump_to_line => Aller à la ligne
 ied_plugin_langs_all => Toutes disponibles
 ied_plugin_langs_installed => Seulement installées
 ied_plugin_lang_choose => Liste des traductions (Textpack)
@@ -1352,13 +1352,13 @@ EOJS
 
         $msgpop = '<div id="ied_plugin_msgpop"><input type="button" class="publish" value="'.gTxt('ok').'" onclick="ied_plugin_toggle_msgpop(\'0\');" /><h2>'.gTxt('ied_plugin_msgpop_lbl').'</h2><span class="ied_plugin_msgpop_content"></span></div>';
 
-        $newname = fInput('text', 'newname', $name, '', '', '', INPUT_REGULAR);
-        $author_widget = fInput('text', 'author', $author, '', '', '', INPUT_REGULAR);
-        $author_uri_widget = fInput('text', 'author_uri', $author_uri, '', '', '', INPUT_REGULAR);
-        $version_widget = fInput('text', 'version', $version, 'input-small', '', '',INPUT_SMALL).(($editfile)
+        $newname = fInput('text', 'newname', $name, '', '', '', INPUT_REGULAR, '', 'newname');
+        $version_widget = fInput('text', 'version', $version, 'input-small', '', '', INPUT_SMALL, '', 'version').(($editfile)
                 ? checkbox('rename_file', '1', 0, '','rename_file') .n. '<label for="rename_file">'.gTxt('ied_plugin_rename_file').'</label>'
                 : checkbox('restore_point', '1', 0, '','restore_point') .n. '<label for="restore_point">'.gTxt('ied_plugin_restore_point').'</label>');
-        $description_widget = fInput('text', 'description', $description, 'input-xlarge', '', '', INPUT_REGULAR);
+        $description_widget = fInput('text', 'description', $description, 'input-xlarge', '', '', INPUT_REGULAR, '', 'description');
+        $author_widget = fInput('text', 'author', $author, '', '', '', INPUT_REGULAR, '', 'author');
+        $author_uri_widget = fInput('text', 'author_uri', $author_uri, '', '', '', INPUT_REGULAR, '', 'author_uri');
         $codeblock = '<textarea name="code" id="plugin_editor" rows="'.INPUT_REGULAR.'" class="code codepress php" maxlength="'.$this->ied_plugin_globals['size_code'].'">'.txpspecialchars($code).'</textarea><div class="ied_plugin_info_bar"><span>'.gTxt('ied_plugin_jump_to_line').'</span><input type="text" id="ied_plugin_jumpToLine" size="5" maxlength="6" /><span class="ied_plugin_charsRemain"></span></div>';
         $help_widget = '<textarea name="help" id="plugin_help" rows="'.INPUT_REGULAR.'" class="mceEditor" maxlength="'.$this->ied_plugin_globals['size_help'].'">'.txpspecialchars($help).'</textarea><div class="ied_plugin_info_bar"><span class="ied_plugin_charsRemain"></span></div>';
         $css_widget = ($styleblock)
@@ -1580,7 +1580,7 @@ EOJS
                 .n. '</div>'
                 .n. '</div>'
                 .n. '<div class="txp-form-field">'
-                .n. '<div class="txp-form-field-label"><label>' . gTxt('ied_plugin_tp_populate')  . '</label></div>'
+                .n. '<div class="txp-form-field-label"><label for="ied_plugin_tp_populate">' . gTxt('ied_plugin_tp_populate')  . '</label></div>'
                 .n. '<div class="txp-form-field-value">'
                 .n. fInput('text', 'ied_plugin_tp_populate', '', '', '', '', '', '', 'ied_plugin_tp_populate')
                 .n. '<button id="ied_plugin_tp_load">' . gTxt('go') . '</button>'
@@ -4523,7 +4523,7 @@ if (0) {
 
 <p>Plugins are limited to 16Mb of code so there is also a character countdown just below the edit box. If you start approaching the limit(!), it might be worth considering splitting your plugin into a few parts or working for Micro$oft, where code bloat is acceptable.</p>
 
-<p>In Firefox and IE7+ you can use the <em>Jump to line:</em> textbox. Enter a line number and press Enter to jump to that line in the code. In other browsers, ymmv.</p>
+<p>In Firefox and IE7+ you can use the <em>Jump to line</em> textbox. Enter a line number and press Enter to jump to that line in the code. In other browsers, ymmv.</p>
 
 <h3>Textpack strings</h3>
 
