@@ -622,7 +622,6 @@ class ied_pc
             'ied_plugin' => '
 .ied_label { margin:0 0.2em 0 0.6em;}
 .ied_plugin_link { float:right; }
-.ied_plugin_info_bar { text-align:right; }
 #ied_plugin_jumpToLine { width:4em; margin:0 1em 0 0.4em; }
 .ied_editForm { width:{edwidth}; margin:0 auto; }
 .ied_subdue { color:gray; padding:1px 2px 2px 1px; }
