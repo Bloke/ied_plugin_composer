@@ -1372,7 +1372,7 @@ EOJS
         );
         $plugtype = selectInput('type', $plugtypes, $type, false, '', 'type');
 
-        $plugorder = selectInput('load_order', $orders, $load_order, 0, 0);
+        $plugorder = selectInput('load_order', $orders, $load_order, 0, 0, 'load_order');
         $flaglist = checkbox(
                 'flags[]',
                 PLUGIN_HAS_PREFS,
@@ -1545,11 +1545,11 @@ EOJS
                 .n. '<div class="txp-form-field-value">' . $plugtype . '</div>'
                 .n. '</div>'
                 .n. '<div class="txp-form-field">'
-                .n. '<div class="txp-form-field-label"><label>' . gTxt('ied_plugin_flags')  . '</label></div>'
+                .n. '<div class="txp-form-field-label">' . gTxt('ied_plugin_flags') . '</div>'
                 .n. '<div class="txp-form-field-value">' . $flaglist . '</div>'
                 .n. '</div>'
                 .n. '<div class="txp-form-field">'
-                .n. '<div class="txp-form-field-label"><label>' . gTxt('ied_plugin_load_order') . gTxt('ied_plugin_load_order_help') . '</label></div>'
+                .n. '<div class="txp-form-field-label"><label for="load_order">' . gTxt('ied_plugin_load_order') .' '. gTxt('ied_plugin_load_order_help') . '</label></div>'
                 .n. '<div class="txp-form-field-value">' . $plugorder . '</div>'
                 .n. '</div>'
                 .n. '</section>'
