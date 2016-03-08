@@ -614,7 +614,7 @@ class ied_pc
     /**
      * CSS definitions: hopefully kind to themers.
      *
-     * @return string Styel rules
+     * @return string Style rules
      */
     protected function get_style_rules()
     {
@@ -632,7 +632,6 @@ class ied_pc
 #options_group_pack ul input { width:450px; }
 #options_group_pack li { margin-bottom:.2em }
 .distribution-code { height:4.2em!important; }
-.ied_plugin_edit_toolbar { text-align:right; width:95%; display:inline-block; margin:-2em 0 0 0; }
 #ied_plugin_msgpop { display:none; position:absolute; left:200px; max-width:500px; border:3px ridge #999; opacity:.92; filter:alpha(opacity:92); padding:15px 20px; background-color:#e2dfce; color:#80551e; }
 #ied_plugin_msgpop .publish { float:right; }
     ',
