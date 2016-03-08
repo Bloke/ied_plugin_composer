@@ -124,7 +124,7 @@ ied_plugin_meta_legend => Meta information
 ied_plugin_meta_save => Save meta
 ied_plugin_meta_saved => Meta info saved
 ied_plugin_meta_saved_fail => Meta info not saved
-ied_plugin_msgpop_lbl => phpdoc block
+ied_plugin_msgpop_lbl => PHPDoc block
 ied_plugin_name_first => Please name the plugin before creating it
 ied_plugin_output_order => PHP export order
 ied_plugin_output_sfile => Export plugin filename format
@@ -133,7 +133,7 @@ ied_plugin_output_sfilep => Plugin template filename format
 ied_plugin_output_sfilet => Textpack filename format
 ied_plugin_output_tmpcache => Cache Textiled help path
 ied_plugin_pack_legend => Textpack strings
-ied_plugin_php_doc => Make phpdoc
+ied_plugin_php_doc => Make PHPDoc
 ied_plugin_prefs => Preferences
 ied_plugin_prefs_deleted => Preferences deleted
 ied_plugin_renamed => (renamed)
@@ -163,7 +163,7 @@ ied_plugin_updated => Plugin {name} updated
 ied_plugin_uploaded => Plugin {name} uploaded
 ied_plugin_upload_php => Upload plugin
 ied_plugin_utils_legend => Distribution
-ied_plugin_utils_legend_extra => Only for use after saving
+ied_plugin_utils_legend_extra => Only for use after saving.
 ied_plugin_view_help => Help: {name}
 #@ied_plugin
 #@language fr-fr
@@ -230,7 +230,7 @@ ied_plugin_meta_legend => Meta information
 ied_plugin_meta_save =>
 ied_plugin_meta_saved =>
 ied_plugin_meta_saved_fail =>
-ied_plugin_msgpop_lbl => Bloc phpdoc
+ied_plugin_msgpop_lbl => Bloc PHPDoc
 ied_plugin_name_first => Veuillez nommer le plugin avant de pouvoir le créer
 ied_plugin_output_order => Orde d'exportation du source PHP
 ied_plugin_output_sfile => Noms d'exportation des fichiers plugin
@@ -239,7 +239,7 @@ ied_plugin_output_sfilep => Noms des fichiers Plugin
 ied_plugin_output_sfilet => Noms des fichiers Textpack
 ied_plugin_output_tmpcache => Chemin du cache de l'aide sous Textile
 ied_plugin_pack_legend => Chaînes du Textpack
-ied_plugin_php_doc => Créer un phpdoc
+ied_plugin_php_doc => Créer un PHPDoc
 ied_plugin_prefs => Préférences
 ied_plugin_prefs_deleted => Préférences supprimées
 ied_plugin_renamed => (renomé)
@@ -268,7 +268,7 @@ ied_plugin_updated => Plugin {name} mis à jour
 ied_plugin_uploaded => Plugin {name} téléchargé
 ied_plugin_upload_php => Télécharger un plugin
 ied_plugin_utils_legend => Distribution
-ied_plugin_utils_legend_extra => Effectif après sauvegarde
+ied_plugin_utils_legend_extra => Effectif après sauvegarde.
 ied_plugin_view_help => Aide de : {name}
 EOT;
 
@@ -299,7 +299,7 @@ if (!defined('txpinterface'))
 //  * Show which langs have installed strings in the distribution section so the correct langs in the select list can be chosen
 //  * Find out why uploading PHP files sometiems throws an error even though it succeeds
 //  * jQuery on editor dropdowns in setup
-//  * phpdoc
+//  * PHPDoc
 
 if (txpinterface === 'admin') {
     new ied_pc();
@@ -1853,7 +1853,7 @@ jQuery(function () {
     jQuery('.ied_editForm').ajaxError(function (event, request, settings) {
         var xhr = jQuery(request.responseText);
 
-        // phpdoc generation barfed
+        // PHPDoc generation barfed
         if (settings.data.indexOf('step=ied_plugin_generate_phpdoc') > -1) {
             var msgContent = jQuery("#ied_plugin_msgpop .ied_plugin_msgpop_content");
             status = xhr.find('http-status').attr('value')
@@ -2065,7 +2065,7 @@ jQuery(function () {
         event.preventDefault();
     });
 
-    // Handle generating phpdoc
+    // Handle generating PHPDoc
     jQuery("#ied_plugin_btn_phpdoc").click(function (event) {
         var msgarea = jQuery("#ied_plugin_msgpop");
         var msgContent = jQuery("#ied_plugin_msgpop .ied_plugin_msgpop_content");
@@ -3878,7 +3878,7 @@ EOJS
         return $code;
     }
 
-    // Reflection utility for phpdoc generation
+    // Reflection utility for PHPDoc generation
     public function reflunction_factory($callback)
     {
         if (is_array($callback)) {
