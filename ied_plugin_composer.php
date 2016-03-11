@@ -47,7 +47,7 @@ if (!defined('PLUGIN_LIFECYCLE_NOTIFY')) define('PLUGIN_LIFECYCLE_NOTIFY', 0x000
 
 $plugin['flags'] = '3';
 
-// Plugin 'textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
+// Plugin 'Textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
 // Syntax:
 // ## arbitrary comment
 // #@event
@@ -83,7 +83,7 @@ ied_plugin_editor_width => Plugin editor width
 ied_plugin_edit_new => Edit your new plugin
 ied_plugin_enable => Enabled
 ied_plugin_export => Export as {name}
-ied_plugin_export_textpack => Export textpack(s)
+ied_plugin_export_textpack => Export Textpack(s)
 ied_plugin_export_zip => Export as {name} (compressed)
 ied_plugin_flags => Flags
 ied_plugin_flag_has_prefs => Has prefs
@@ -103,7 +103,8 @@ ied_plugin_jump_to_line => Jump to line
 ied_plugin_langs_all => All available
 ied_plugin_langs_installed => Only installed
 ied_plugin_lang_choose => Textpack language list
-ied_plugin_lang_default => Default textpack language
+ied_plugin_lang_default => Default Textpack language
+ied_plugin_lang_unassign => Unassigned
 ied_plugin_list => Plugin list
 ied_plugin_lbl_lc_delete => Delete
 ied_plugin_lbl_lc_disable => Disable
@@ -194,7 +195,7 @@ ied_plugin_editor_width => Taille (largeur) de l'éditeur de plugin
 ied_plugin_edit_new => Éditer votre nouveau plugin
 ied_plugin_enable => Activé
 ied_plugin_export => Exporter sous {name}
-ied_plugin_export_textpack => Exporter le(s) textpack(s)
+ied_plugin_export_textpack => Exporter le(s) Textpack(s)
 ied_plugin_export_zip => Exporter sous {name} (compressé)
 ied_plugin_flags => Flags
 ied_plugin_flag_has_prefs => A les préfs
@@ -214,6 +215,7 @@ ied_plugin_langs_all => Toutes disponibles
 ied_plugin_langs_installed => Seulement installées
 ied_plugin_lang_choose => Liste des traductions (Textpack)
 ied_plugin_lang_default => Langue par défaut (Textpack)
+ied_plugin_lang_unassign => Non attribué
 ied_plugin_list =>
 ied_plugin_lbl_lc_delete => Supprimer
 ied_plugin_lbl_lc_disable => Désactiver
@@ -425,7 +427,7 @@ if (txpinterface === 'admin') {
     }
 
     /**
-     * Public tag: List of available textpack information.
+     * Public tag: List of available Textpack information.
      *
      * @param array  $atts  Tag attributes
      * @param string $thing Tag container content
@@ -494,7 +496,7 @@ if (txpinterface === 'admin') {
     function ied_plugin_download_link($atts, $thing = null)
     {
         extract(lAtts(array(
-            'type'     => 'compressed', // uncompressed, compressed, template, textpack
+            'type'     => 'compressed', // uncompressed, compressed, template, Textpack
             'name'     => '',
             'filename' => '',
             'label'    => 'Download',
@@ -1161,7 +1163,7 @@ EOJS
                     break;
 
                 case 'textpack':
-                    // Read the textpack from the .php file and call install_textpack()
+                    // Read the Textpack from the .php file and call install_textpack()
                     $textpack = array();
                     foreach ($selected_cache as $name) {
                         $fileaddr = $pcd . DS . $name;
@@ -1424,12 +1426,12 @@ EOJS
 
         $preselected = do_list(get_pref('ied_plugin_lang_selected', ''));
 
-        $op_langs[] = '<select name="ied_plugin_tp_oplangs" id="ied_plugin_tp_oplangs" multiple="multiple"><option value=""></option>';
+        $op_langs[] = '<select name="ied_plugin_tp_oplangs" id="ied_plugin_tp_oplangs" multiple="multiple">'.n.'<option value="">' . gTxt('ied_plugin_lang_unassign') . '</option>';
         foreach ($ied_available_langs as $langcode => $alang) {
             $sel = in_array($langcode, $preselected) ? ' selected="selected"' : '';
-            $op_langs[] = '<option value="'.$langcode.'"'.$sel.'>'.$alang.'</option>';
+            $op_langs[] = n.'<option value="'.$langcode.'"'.$sel.'>'.$alang.'</option>';
         }
-        $op_langs[] = '</select>';
+        $op_langs[] = n.'</select>';
 
         $tp_strings = array();
         $tp_rows = $this->textpack_grab($dflt_lang, $tp_pfx);
@@ -1804,13 +1806,13 @@ jQuery(function () {
 
             ied_tp_used = ied_tp_used.unique();
 
-            // List of all current textpack strings in use (as of last Save operation)
+            // List of all current Textpack strings in use (as of last Save operation)
             var ied_tp_curr = [];
             jQuery('#options_group_pack ul label').each(function () {
                 ied_tp_curr[ied_tp_curr.length] = jQuery(this).text();
             });
 
-            // Iterate over current array and check if each name is in the used textpack item list.
+            // Iterate over current array and check if each name is in the used Textpack item list.
             // If it is, remove it from the final list.
             for (var idx = 0; idx < ied_tp_curr.length; idx++) {
                 if ((pos = jQuery.inArray(ied_tp_curr[idx], ied_tp_used)) > -1) {
@@ -1899,7 +1901,7 @@ jQuery(function () {
         ied_plugin_update_tp_count();
     });
 
-    // Save textpack string to database
+    // Save Textpack string to database
     function ied_plugin_tp_save(event)
     {
         var elem = jQuery(this);
@@ -1922,7 +1924,7 @@ jQuery(function () {
         });
     }
 
-    // Handle saving textpack string
+    // Handle saving Textpack string
     jQuery(document).on('blur', '#options_group_pack ul li input', ied_plugin_tp_save);
     jQuery(document).on('change', '#options_group_pack ul li select', ied_plugin_tp_save);
 
@@ -1977,7 +1979,7 @@ jQuery(function () {
         jQuery("#ied_plugin_tp_lang").change();
     });
 
-    // Load textpack strings from plugin's custom gTxt()
+    // Load Textpack strings from plugin's custom gTxt()
     jQuery("#ied_plugin_tp_load").click(function (event) {
         var ied_fn = jQuery("#ied_plugin_tp_populate").val();
 
@@ -2235,7 +2237,7 @@ EOJS
                 }
             }
 
-            // Store the plugin textpack prefix
+            // Store the plugin Textpack prefix
             $this->set_tp_prefix($newname, $ied_plugin_tp_prefix);
         }
         if ($msg2) {
@@ -2271,7 +2273,7 @@ EOJS
             $code=implode("\r\n",$code);
         }
 
-        // Get any textpack strings
+        // Get any Textpack strings
         $textpack = $this->textpack_build($name);
 
         list ($start_css, $end_css) = $this->make_markers("CSS", $this->ied_plugin_globals['css_start'], $this->ied_plugin_globals['css_end']);
@@ -2363,7 +2365,7 @@ EOJS
     }
 
     /**
-     * Export only the textpacks from the plugin.
+     * Export only the Textpacks from the plugin.
      */
     public function save_as_textpack()
     {
@@ -2451,7 +2453,7 @@ EOJS
                                 ? '$plugin[\'textpack\'] = <<<EOT'.n
                                     .$val.n
                                     .'EOT;'.n.n
-                                : '/** Uncomment me, if you need a textpack'.n
+                                : '/** Uncomment me, if you need a Textpack'.n
                                     .'$plugin[\'textpack\'] = <<< EOT'.n
                                     .'#@admin'.n
                                     .'#@language en-gb'.n
@@ -2462,7 +2464,7 @@ EOJS
                                     .'abc_one_more => Noch einer'.n
                                     .'EOT;'.n
                                     .'**/'.n
-                                    .'// End of textpack'.n.n),
+                                    .'// End of Textpack'.n.n),
             "author" => '$plugin[\'author\'] = '.doQuote(doSlash($val)).';'.n,
             "author_uri" => '$plugin[\'author_uri\'] = '.doQuote(doSlash($val)).';'.n,
             "description" => '$plugin[\'description\'] = '.doQuote(doSlash($val)).';'.n.n,
@@ -2783,7 +2785,7 @@ EOJS
      *  1) the standard plugin
      *  2) the compressed plugin
      *  3) the PHP template
-     *  4) the textpack
+     *  4) the Textpack
      */
     public function get_name($name, $version = '', $lang='')
     {
@@ -3470,7 +3472,7 @@ EOJS
     }
 
     /**
-     * Build textpack from strings in the database.
+     * Build Textpack from strings in the database.
      *
      * @param  string  $name      Plugin name
      * @param  integer $force_all Whether to build for the current langue (0) or all installed languages (1)
@@ -3524,7 +3526,7 @@ EOJS
                 // Make sure default language is actually first.
                 ksort($tplang);
 
-                // Build the final textpack array with language markers.
+                // Build the final Textpack array with language markers.
                 // Note the marker for the default language may (should!) be omitted if the author wants
                 // the strings to be installed regardless of language on destination server.
                 // If a specific language is set and the user does not have that language
@@ -3565,7 +3567,7 @@ EOJS
     }
 
     /**
-     * Read textpack strings with the given prefix from the database.
+     * Read Textpack strings with the given prefix from the database.
      *
      * @param  string $lang   Language of strings to fetch
      * @param  string $prefix Prefix to find
@@ -3597,7 +3599,7 @@ EOJS
     }
 
     /**
-     * Store the plugin textpack prefix.
+     * Store the plugin Textpack prefix.
      *
      * @param string $plugname Plugin name to store (if omitted, tries GET/POST for 'plugin')
      * @param string $pfx      Prefix to store (if omitted, tries GET/POST for 'prefix')
@@ -4533,13 +4535,13 @@ if (0) {
 
 <p class="warning">A word of caution: the Textpack area works a little differently to the rest of the Edit panel: most changes happen live as you type.</p>
 
-<p>Before you begin you need to define a textpack prefix for the plugin. This is usually your three letter plugin prefix plus some unique identifier with which all strings in use by the plugin will begin. For example, the plugin composer uses <code>ied_plugin</code> (though it could have used <code>ied_pcomp</code> or <code>ied_pc</code>, etc). Note that using just your three letter prefix is probably not wise because your own future plugins might require a similarly-named replacement and the strings would clash. Of course, you might want to take advantage of this feature!</p>
+<p>Before you begin you need to define a Textpack prefix for the plugin. This is usually your three letter plugin prefix plus some unique identifier with which all strings in use by the plugin will begin. For example, the plugin composer uses <code>ied_plugin</code> (though it could have used <code>ied_pcomp</code> or <code>ied_pc</code>, etc). Note that using just your three letter prefix is probably not wise because your own future plugins might require a similarly-named replacement and the strings would clash. Of course, you might want to take advantage of this feature!</p>
 
 <p>Once you enter the prefix and your cursor leaves the box, the composer will store the prefix and search the plugin code immediately for any references to such prefixed strings inside any function call with <code>gTxt</code> in it. Any it does find will be listed and you can immediately begin entering your replacement text in the currently selected language. Whenever the cursor leaves a text box its contents is saved directly to the database.</p>
 
 <p>Textpack strings can be used on the Admin side, the Public site, or both. Choose the most appropriate location from the dropdown against each string.</p>
 
-<p>If you create or rename a gTxt string in the code, when your cursor leaves the textarea the new string(s) will be created for you in the textpack area at the top of the list. Note however they are not written to the database until you supply a replacement string.</p>
+<p>If you create or rename a gTxt string in the code, when your cursor leaves the textarea the new string(s) will be created for you in the Textpack area at the top of the list. Note however they are not written to the database until you supply a replacement string.</p>
 
 <p>During the process of creating/renaming replacement strings, if it orphans another string then the orphan will be highlighted and an [x] button will appear next to it. If you wish to copy the old content out of the box and paste it into your renamed string, now is the time to do so. Once you&#8217;re sure you no longer need the string, hit the [x] button to immediately delete it from the database. It will be removed from <strong>all</strong> languages.</p>
 
@@ -4586,7 +4588,7 @@ if (0) {
 
 <p><strong>Switching language</strong></p>
 
-<p>If at any time you want to see the installed textpack strings in other languages, simply use the select list to choose one. Any defined strings will be loaded into the textpack fields. You&#8217;ll see a counter whizzing up to show you how far it&#8217;s gone. As a translation aid, the equivalent string in your nominated default language (see <a href="#plugin_setup">setup</a>) will be displayed as you hover over the textpack entry. You can choose to translate strings yourself or you can defer translation to other members of the community after the plugin is published. Textpacks can be linked to your textpattern.org plugin page by contributors and installed at any time from Textpattern&#8217;s <i>Languages</i> tab.</p>
+<p>If at any time you want to see the installed Textpack strings in other languages, simply use the select list to choose one. Any defined strings will be loaded into the Textpack fields. You&#8217;ll see a counter whizzing up to show you how far it&#8217;s gone. As a translation aid, the equivalent string in your nominated default language (see <a href="#plugin_setup">setup</a>) will be displayed as you hover over the Textpack entry. You can choose to translate strings yourself or you can defer translation to other members of the community after the plugin is published. Textpacks can be linked to your textpattern.org plugin page by contributors and installed at any time from Textpattern&#8217;s <i>Languages</i> tab.</p>
 
 <h3>Plugin help</h3>
 
@@ -4649,7 +4651,7 @@ if (0) {
     <dt><strong>Default Textpack language</strong></dt>
     <dd>The primary language for your plugin strings (default = any). If you choose a language that is not installed (and you&#8217;re limiting the language list to only those installed) the default language will revert to your current admin-side language.</dd>
     <dd>Note that if you set a language here, when you export Textpacks or build plugins, that will be the language expected to be installed in a user&#8217;s Textpattern. If you leave it at &#8216;any&#8217; the language marker is omitted from the Textpack and thus the strings bundled with the plugin (which may be in English) will install into whichever language is the user&#8217;s default (which may be something other than English). By forcing the default language, you force the language marker in the plugin. Thus if your users don&#8217;t have that language installed (e.g. someone only has nl-nl installed and not English) and they install your plugin, it will look at the installed language (nl-nl), compare it to the one in the plugin (en-gb), find it doesn&#8217;t match and will skip the Textpack installation. This will leave the user&#8217;s interface with lots of ugly <code>abc_plugin_some_item</code> strings instead of the actual translated content.</dd>
-    <dd>This could be handy if you are distributing Textpacks separately and have a good stock of them, or have loads of Textpacks bundled with the plugin, but for 95% of cases it is best to leave the default textpack language at <code>Any</code> so users of your plugin are guaranteed to get some translated strings, even if they are not in their &#8216;local&#8217; language. They can then at least translate them and make the Textpack available to other users.</dd>
+    <dd>This could be handy if you are distributing Textpacks separately and have a good stock of them, or have loads of Textpacks bundled with the plugin, but for 95% of cases it is best to leave the default Textpack language at <code>Any</code> so users of your plugin are guaranteed to get some translated strings, even if they are not in their &#8216;local&#8217; language. They can then at least translate them and make the Textpack available to other users.</dd>
     <dt><strong><span class="caps">PHP</span> export order</strong></dt>
     <dd>When saving your plugin in the standard template format, this governs whether you prefer the code block to be at the top of the file and the help block below, or vice versa.</dd>
     <dt><strong>Export plugin filename format</strong></dt>
@@ -4657,7 +4659,7 @@ if (0) {
     <dt><strong>Export template filename format</strong></dt>
     <dt><strong>Textpack filename format</strong></dt>
     <dd>These define the format of the filenames when you export plugins/Textpacks. The first is for when you export standard <span class="caps">BASE</span>-64 plugins; the second is for compressed plugins; the third is for exporting a standard <span class="caps">PHP</span> template, and finally for exporting Textpacks.</dd>
-    <dd>Wherever you type <code>{name}</code>, the plugin name will appear. Similarly, <code>{version}</code> will be replaced with the current plugin version number. And <code>{lang}</code> will be replaced with either 1) the chosen language code, like en-gb; 2) &#8216;all&#8217; if you chose to export all textpacks as one file; 3) an abbreviated list of countries to which the languages in the pack apply if you choose to export more than one, e.g. <code>en+fi+nl+fr+de</code>.</dd>
+    <dd>Wherever you type <code>{name}</code>, the plugin name will appear. Similarly, <code>{version}</code> will be replaced with the current plugin version number. And <code>{lang}</code> will be replaced with either 1) the chosen language code, like en-gb; 2) &#8216;all&#8217; if you chose to export all Textpacks as one file; 3) an abbreviated list of countries to which the languages in the pack apply if you choose to export more than one, e.g. <code>en+fi+nl+fr+de</code>.</dd>
     <dd>You can type anything you like in these boxes, but it&#8217;s more useful to include the replacement strings somewhere in each box so you don&#8217;t get name / version clashes. For example, if you don&#8217;t like the fact that zipped plugins are exported as <code>pfx_my_plugin_v0.1_zip.txt</code>, you can change it. Perhaps you may prefer <code>pfx_my_plugin-compressed-0.1.txt</code>. In which case, set the 2nd box to <code>{name}-compressed-{version}.txt</code>.</dd>
     <dd>Note the extension should usually be specified so your system/browser knows the file&#8217;s type when it is exported, but it&#8217;s not mandatory as the <span class="caps">MIME</span> type is given so (good) browsers should read that.</dd>
     <dt><strong>Cache Textiled help path</strong></dt>
@@ -4694,7 +4696,7 @@ Plus help from a host of forum contributors too numerous to mention. You know wh
     <li>15 Oct 2013 | 1.04 | Fixed bug preventing help being packaged in downloaded plugin from public side</li>
     <li>28 Sep 2013 | 1.03 | Added public tags ied_plugin_download, ied_plugin_download_link</li>
     <li>27 Sep 2013 | 1.02 | Added public tags ied_plugin_list (from DB only for now), ied_plugin_info, ied_plugin_download, ied_plugin_download_link, ied_plugin_textpacks.</li>
-    <li>25 Sep 2013 | 1.01 | Fixed textpack display string bug on admin side</li>
+    <li>25 Sep 2013 | 1.01 | Fixed Textpack display string bug on admin side</li>
     <li>09 May 2013 | 1.00 | Added Textpack support and management ; permitted more installation / creation options; retooled the UI for Txp 4.5.x; added dedicated <b>Save Code</b> button with syntax check for faster saving via <span class="caps">AJAX</span>; made &#8216;distribution&#8217; and &#8216;style&#8217; blocks optional to speed up full saves; added support for firing lifecycle events; supports the two new <span class="caps">AJAX</span> plugin types introduced in Txp 4.5.0; more options for multi edit changestatus</li>
     <li>23 Nov 2010 | 0.93 | Fixed setup screen &#8216;undefined&#8217; bug (thanks MarcoK)</li>
     <li>03 Nov 2010 | 0.92 | Fixed Options link for plugins from cache dir and fixed escaping of exported php files (both thanks maniqui) ; fixed escaping when importing from <span class="caps">PHP</span> file ; cosmetic tweaks (plugin_cache_dir section only displayed if there are valid <span class="caps">PHP</span> files, and View Help link adjusted) ; fixed jQuery on setup panel ; extended resizer cookie to one year expiry</li>
