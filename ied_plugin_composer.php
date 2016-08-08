@@ -819,8 +819,6 @@ class ied_pc
             n. '</div>';
 
         // Main plugin list
-        echo n. '<div id="ied_plugin_container" class="txp-container">';
-
         $rs = safe_rows('*', 'txp_plugin', '1=1 ORDER BY '.$sort_sql);
 
         if ($rs) {
@@ -975,7 +973,7 @@ class ied_pc
             }
         }
 
-        echo '</div></div>'.
+        echo '</div>'.
             n. script_js( <<<EOJS
 $(document).ready(function () {
     $('#ied_plugin_db_form').txpMultiEditForm({
