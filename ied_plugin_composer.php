@@ -757,12 +757,12 @@ class ied_pc
         $auto_en = get_pref('ied_plugin_auto_enable');
         $pcd = get_pref('plugin_cache_dir');
 
-        $aeRadio[] = '<p class="ied_plugin_radioset ied_plugin_autoenable txp-layout-2col-cell-1">';
+        $aeRadio[] = '<p class="ied_plugin_radioset ied_plugin_autoenable txp-layout-2col">';
         $aeRadio[] = '<label class="ied_label">' . gTxt('ied_plugin_auto_enable') . '</label>';
         $aeRadio[] = radioset($ied_plugin_prefs['ied_plugin_auto_enable']['content'], 'ied_plugin_autoenable', $auto_en);
         $aeRadio[] = '</p>';
 
-        $ioRadio[] = '<p class="ied_plugin_radioset ied_plugin_installopts txp-layout-2col-cell-2" hidden>';
+        $ioRadio[] = '<p class="ied_plugin_radioset ied_plugin_installopts txp-layout-2col" hidden>';
         $ioRadio[] = '<label class="ied_label">' . gTxt('ied_plugin_run_install') . '</label>';
         $ioRadio[] = yesnoradio('ied_plugin_installopts', $checked);
         $ioRadio[] = '</p>';
@@ -782,12 +782,14 @@ class ied_pc
         $switch_dir = ($dir == 'desc') ? 'asc' : 'desc';
 
         // Top control-panel part of screen
-        echo '<div class="txp-layout-2col-cell-1">'.
+        echo '<div class="txp-layout">'.
+            n. '<div class="txp-layout-2col">'.
             n. '<h1 class="txp-heading">'.gTxt('ied_plugin_composer').sp.$this->anchor($this->ied_pc_event, 'help_viewer', '?', array('name' => 'ied_plugin_composer'), array('class' => 'pophelp')).'</h1>'.
             n. '</div>'.
-            n. '<div id="ied_plugin_control" class="txp-layout-2col-cell-2">'.
+            n. '<div id="ied_plugin_control" class="txp-layout-2col">'.
             n. sLink($this->ied_pc_event, 'prefs', gTxt('ied_plugin_setup'), 'ied_plugin_link').
             n. '</div>'.
+            n. '<div class="txp-layout-1col">'.
             n. '<div class="summary-details clear"><h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_cpanel_visible') ? ' expanded' : '').'"><a href="#ied_plugin_cpanel">' . gTxt('ied_plugin_cpanel_legend') . '</a></h3><div id="ied_plugin_cpanel" class="toggle" style="display:'.(get_pref('pane_ied_plugin_cpanel_visible') ? 'block' : 'none').'">'.
             n. '<form class="ied_plugin_form" enctype="multipart/form-data" action="index.php" method="post">'.
             n. implode(n, $aeRadio).
@@ -813,6 +815,7 @@ class ied_pc
             n. tInput().
             n. '</form>'.
             n. '</div>'.
+            n. '</div>'.
             n. '</div>';
 
         // Main plugin list
@@ -821,7 +824,8 @@ class ied_pc
         $rs = safe_rows('*', 'txp_plugin', '1=1 ORDER BY '.$sort_sql);
 
         if ($rs) {
-            echo '<div class="summary-details">'.
+            echo '<div class="txp-layout-1col">'.
+                n. '<div class="summary-details">'.
                 n. '<form action="index.php" id="ied_plugin_db_form" method="post">'.
                 n. '<h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_dbplugs_visible') ? ' expanded' : '').'">'.
                 n. '<a href="#ied_plugin_dbplugs">' . gTxt('ied_plugin_dbplugs_legend') . '</a>'.
@@ -867,6 +871,7 @@ class ied_pc
             }
             echo n. '</tbody>'.
                 n. endTable().
+                n. '</div>'.
                 n. '</div>'.
                 n. tInput().
                 n. '</form>'.
@@ -937,7 +942,8 @@ class ied_pc
             }
 
             if ($out) {
-                echo '<div class="summary-details">'.
+                echo '<div class="txp-layout-1col">'.
+                    n. '<div class="summary-details">'.
                     n. '<form action="index.php" id="ied_plugin_cache_form" method="post">'.
                         n. '<h3 class="lever txp-summary'.(get_pref('pane_ied_plugin_cacheplugs_visible') ? ' expanded' : '').'">'.
                         n. '<a href="#ied_plugin_cacheplugs">' . gTxt('ied_plugin_cacheplugs_legend') . '</a>'.
@@ -964,11 +970,12 @@ class ied_pc
                     n. '</form>'.
                     $this->multiedit_form('cache', '', $sort, $dir, '', '').
                     n. '</div>'.
+                    n. '</div>'.
                     n. '</div>';
             }
         }
 
-        echo '</div>'.
+        echo '</div></div>'.
             n. script_js( <<<EOJS
 $(document).ready(function () {
     $('#ied_plugin_db_form').txpMultiEditForm({
@@ -1477,13 +1484,14 @@ EOJS
 
         echo
             n. form(
-                '<div class=txp-layout-2col-cell-1>'
+                '<div class="txp-layout">'
+                .n. '<div class="txp-layout-2col">'
                 .n. hed(gTxt('ied_plugin_edit', array('{name}' => $name, '{version}' => $version)), 1, array('class' => 'txp-heading'))
                 .n. '</div>'
-                .n. '<div class=txp-layout-2col-cell-2>'
+                .n. '<div class="txp-layout-2col">'
                 .n. sLink($this->ied_pc_event, '', gTxt('ied_plugin_list'), 'ied_plugin_link')
                 .n. '</div>'
-                .n. '<div class="txp-layout-4col-cell-1alt" id="ied_edit_switcher" role="region">'
+                .n. '<div class="txp-layout-4col-alt" id="ied_edit_switcher" role="region">'
                 .n. '<section class="txp-details" id="all_options" aria-labelledby="all_options-label">'
                 .n. '<h3 id="all_options-label">Panels</h3>'
                 .n. '<div role="group">'
@@ -1510,7 +1518,7 @@ EOJS
                 .n. '</section>'
                 .n. '</div>'
 
-                .n. '<div class="txp-layout-4col-cell-2-3-4" id="ied_edit_content" role="region">'
+                .n. '<div class="txp-layout-4col-3span" id="ied_edit_content" role="region">'
                 .n. '<section class="txp-prefs-group" id="options_group_meta" aria-labelledby="options_group_meta-label">'
                 .n. hed(gTxt('ied_plugin_meta_legend'), 2, array('id' => 'options_group_meta-label'))
                 .n. '<span class="ied_plugin_edit_toolbar">' . $metasub . '</span>'
@@ -2097,7 +2105,8 @@ jQuery(function () {
 
 });
 EOJS
-            );
+            )
+        .n. '</div>';
     }
 
     /**
@@ -3282,10 +3291,11 @@ EOJS;
 
         $btnSave = fInput('submit', 'submit', gTxt('save'), 'publish');
 
-        echo '<div class="txp-layout-2col-cell-1">'
+        echo '<div class="txp-layout">'
+            .n. '<div class="txp-layout-2col">'
             .n. '<h1 class="txp-heading">' . gTxt('ied_plugin_lbl_setup') . '</h1>'
             .n. '</div>'
-            .n. '<div class=txp-layout-2col-cell-2>'
+            .n. '<div class="txp-layout-2col">'
             .n. sLink($this->ied_pc_event, '', gTxt('ied_plugin_list'), 'ied_plugin_link')
             .n. '</div>'
             .n. script_js(<<<EOJS
@@ -3378,7 +3388,7 @@ EOJS
         }
         $out[] = graf(fInput('submit', 'ied_plugin_pref_save', gTxt('save'), 'publish'), array('class' => 'txp-save'));
         $out[] = tInput();
-        $out[] = '</form></div>';
+        $out[] = '</form></div></div>';
 
         echo implode(n, $out);
     }
