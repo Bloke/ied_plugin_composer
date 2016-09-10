@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.10 - 2016-08-08
+## 1.10 - 2016-09-10
 
 * For Txp 4.6.x+ only.
 * Added Textpack string counter.
