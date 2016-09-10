@@ -295,7 +295,6 @@ if (!defined('txpinterface'))
 // TODO:
 //  * Use href() (from 4.6.+) for anchor creation to avoid double-encoded ampersands
 //  * Figure out why syntax checker doesn't jump to line number sometimes (AJAX fails with error but it's not handled)
-//  * Fix CSS/Markup so Textpack strings twisty label doesn't range right
 //  * Show which langs have installed strings in the distribution section so the correct langs in the select list can be chosen
 //  * Find out why uploading PHP files sometiems throws an error even though it succeeds
 //  * jQuery on editor dropdowns in setup
