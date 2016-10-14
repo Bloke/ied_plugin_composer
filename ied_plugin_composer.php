@@ -17,7 +17,7 @@ $plugin['name'] = 'ied_plugin_composer';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '1.1.0';
+$plugin['version'] = '1.1.1';
 $plugin['author'] = 'Yura Linnyk / Stef Dawson / Steve Dickinson';
 $plugin['author_uri'] = 'http://stefdawson.com/';
 $plugin['description'] = 'Create, publish and edit plugins from within Textpattern CMS';

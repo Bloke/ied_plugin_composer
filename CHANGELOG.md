@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.10 - 2016-09-10
+## 1.1.1 - 2016-10-14
+
+* Fixed multi-edit widget functionality.
+
+## 1.1.0 - 2016-09-10
 
 * For Txp 4.6.x+ only.
 * Added Textpack string counter.
