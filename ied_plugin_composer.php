@@ -871,8 +871,8 @@ class ied_pc
                 n. '</div>'.
                 n. '</div>'.
                 n. tInput().
-                n. '</form>'.
                 $this->multiedit_form('db', '', $sort, $dir, '', '').
+                n. '</form>'.
                 n. '</div>'.
                 n. '</div>';
         }
@@ -964,8 +964,8 @@ class ied_pc
                     n. endTable().
                     n. '</div>'.
                     n. tInput().
-                    n. '</form>'.
                     $this->multiedit_form('cache', '', $sort, $dir, '', '').
+                    n. '</form>'.
                     n. '</div>'.
                     n. '</div>'.
                     n. '</div>';
