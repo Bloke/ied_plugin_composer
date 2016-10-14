@@ -2882,11 +2882,17 @@ EOJS
                     preg_match("/.*'(.*)'.*/", $parts[1], $val); // Remove anything outside the quotes (e.g. $revision)
 
                     if (empty($val)) {
-                        // Try unquoted - may be a constant
+                        // Try unquoted - may be a constant or two.
                         preg_match("/(.*)/", $parts[1], $val);
+
                         if (strtoupper($val[1]) == $val[1]) {
                             // It's a constant so get its value
-                            $val[1] = constant($val[1]);
+                            $val[1] = 0;
+                            $constants = do_list($parts[1], '|');
+
+                            foreach ($constants as $constant) {
+                                $val[1] |= (defined($constant)) ? constant($constant) : 0;
+                            }
                         }
                     }
                 }
@@ -2895,15 +2901,6 @@ EOJS
                     $revparts = explode(' ', trim($val[1], '$ '));
                     $val[1] = $revparts[count($revparts)-1];
                     $val[1] = (empty($val[1])) ? '' : '.' .$val[1];
-                }
-
-                if ($var[1] === 'flags' && !isset($val[1])) {
-                    // Unquoted value; possibly constants
-                    $val[1] = 0;
-                    $constants = do_list($parts[1], '|');
-                    foreach ($constants as $constant) {
-                        $val[1] |= (defined($constant)) ? constant($constant) : 0;
-                    }
                 }
 
                 if ($var[1] === 'textpack') {

@@ -3,6 +3,7 @@
 ## 1.1.1 - 2016-10-14
 
 * Fixed multi-edit widget functionality.
+* Fixed multiple constants in plugin templates (thanks, testdeputy)
 
 ## 1.1.0 - 2016-09-10
 
