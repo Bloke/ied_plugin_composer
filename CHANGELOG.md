@@ -1,9 +1,10 @@
 # Changelog
 
-## 1.1.1 - 2016-10-14
+## 1.1.1 - 2016-11-08
 
 * Fixed multi-edit widget functionality.
 * Fixed multiple constants in plugin templates (thanks, testdeputy)
+* Fixed saving of checkbox values during meta_save
 
 ## 1.1.0 - 2016-09-10
 

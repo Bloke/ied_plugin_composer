@@ -4605,7 +4605,7 @@ Any time a plugin is marked as 'modified', the version number becomes clickable 
 
 During the editing process of your own plugins, it may be that at certain times you wish to put a stake in the ground and say "this is my current baseline that I might want to return to later". Perhaps you are about to make some major edits or try something experimental and want an easy fallback mechanism. That's where the "Restore point" checkbox comes in.
 
-By checking the box when you save your plugin, the current code will become your new rollback point and the plugin will no longer be marked "modified". Any changes made beforehand will not be recoverable so you will have to rely on your own backups if you wish to go back further. Any edits you make after creating a restore point can be undone by visiting the "list panel":#ied_plugin_list and clicking the version number next to your plugin. Currently, only one rollback point can be stored in the database.
+By checking the box when you fully save your plugin, the current code will become your new rollback point and the plugin will no longer be marked "modified". Any changes made beforehand will not be recoverable so you will have to rely on your own backups if you wish to go back further. Any edits you make after creating a restore point can be undone by visiting the "list panel":#ied_plugin_list and clicking the version number next to your plugin. Currently, only one rollback point can be stored in the database. Note that the "Restore point" checkbox is ignored during saving of meta data only, since you are not saving any code.
 
 h2(#ied_plugin_setup). Setup panel
 
