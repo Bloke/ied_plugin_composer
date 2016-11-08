@@ -2011,13 +2011,18 @@ jQuery(function () {
             var objid = obj.attr('name');
             datablock[objid] = obj.val();
         });
+
         jQuery(metaobj).find('input[type="radio"], input[type="checkbox"]').each(function() {
             var obj = jQuery(this);
-            var objid = obj.attr('name');
+            var objid = obj.attr('name').replace(/\[\]/, '');
+            if (typeof datablock[objid] == 'undefined') {
+                datablock[objid] = [];
+            }
             if (obj.prop('checked') === true) {
-                datablock[objid] = obj.val();
+                datablock[objid].push(obj.val());
             }
         });
+
         jQuery(metaobj).find('select').each(function() {
             var obj = jQuery(this);
             var objid = obj.attr('name');
@@ -3770,8 +3775,13 @@ EOJS
         $plug = doSlash(ps('plugin'));
         $data = ps('data');
         $msg = '';
-        $set = array();
         $meta = array();
+
+        // Defaults required because HTML forms don't post unchecked items.
+        $set = array(
+            'flags'  => "flags='0'",
+            'status' => "status='0'",
+            );
 
         foreach ($data as $key => $value) {
             switch ($key) {
@@ -3781,14 +3791,28 @@ EOJS
                 case 'author_uri':
                 case 'type':
                 case 'load_order':
-                case 'flags':
-                case 'status':
-                    $set[] = $key . "='".doSlash($value)."'";
+                    $set[$key] = $key . "='".doSlash($value)."'";
                     break;
                 case 'newname':
                     $val = doSlash($value);
-                    $set[] = "name='".$val."'";
+                    $set['name'] = "name='".$val."'";
                     $meta['name'] = $val;
+                    break;
+                case 'status':
+                case 'flags':
+                    $part = array();
+
+                    foreach ($value as $item) {
+                        if (!isset($part[$key])) {
+                            $part[$key] = '';
+                        }
+                        $part[$key] += $item;
+                    }
+
+                    foreach ($part as $idx => $val) {
+                        $set[$idx] = $idx . "='" . doSlash($val)."'";
+                    }
+
                     break;
             }
         }
