@@ -1906,7 +1906,7 @@ jQuery(function () {
         var tp_ev = (isSel) ? elem.val() : elem.nextAll('select').val();
         var tp_evt = (tp_ev=='public' || tp_ev=='common') ? tp_ev : jQuery('#ied_plugin_tp_prefix').val();
         var tp_lng = jQuery('#ied_plugin_tp_lang').val();
-
+        var tp_own = jQuery('#ied_plugin_tp_prefix').val();
 
         sendAsyncEvent(
         {
@@ -1915,7 +1915,8 @@ jQuery(function () {
             ied_tp_evt: tp_evt,
             ied_tp_lbl: tp_lbl,
             ied_tp_lng: tp_lng,
-            ied_tp_str: tp_str
+            ied_tp_str: tp_str,
+            ied_tp_own: tp_own
         });
     }
 
@@ -3685,14 +3686,15 @@ EOJS
         $str = doSlash(gps('ied_tp_str'));
         $lng = doSlash(gps('ied_tp_lng'));
         $evt = doSlash(gps('ied_tp_evt'));
+        $own = doSlash(gps('ied_tp_own'));
 
         $where = "name='$lbl' AND lang='$lng'";
-        $ret = safe_update('txp_lang', "data='$str', event='$evt'", $where);
+        $ret = safe_update('txp_lang', "data='$str', event='$evt', owner='$own'", $where);
 
         if ($ret && (mysqli_affected_rows($DB->link) || safe_count('txp_lang', $where))) {
             // Update OK: do nothing else.
         } else {
-            $ret = safe_insert('txp_lang', "name='$lbl', lang='$lng', event='$evt', data='$str'");
+            $ret = safe_insert('txp_lang', "name='$lbl', lang='$lng', event='$evt', owner='$own', data='$str'");
         }
     }
 
