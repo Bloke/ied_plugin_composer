@@ -1,10 +1,11 @@
 # Changelog
 
-## 1.1.1 - 2016-11-08
+## 1.1.1 - 2016-11-14
 
 * Fixed multi-edit widget functionality.
 * Fixed multiple constants in plugin templates (thanks, testdeputy)
 * Fixed saving of checkbox values during meta_save
+* Added owner for Textpack strings, taken from the designated plugin prefix.
 
 ## 1.1.0 - 2016-09-10
 
