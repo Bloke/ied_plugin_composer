@@ -18,7 +18,7 @@ $plugin['name'] = 'ied_plugin_composer';
 # $plugin['allow_html_help'] = 1;
 
 $plugin['version'] = '1.1.1';
-$plugin['author'] = 'Yura Linnyk / Stef Dawson / Steve Dickinson';
+$plugin['author'] = 'Yura Linnyk, Stef Dawson, Steve Dickinson';
 $plugin['author_uri'] = 'http://stefdawson.com/';
 $plugin['description'] = 'Create, publish and edit plugins from within Textpattern CMS';
 
@@ -169,7 +169,7 @@ ied_plugin_view_help => Help: {name}
 #@language fr-fr
 ied_plugin_any => Tous
 ied_plugin_auto_enable => Activer les plugins dès leur installation
-ied_plugin_cacheplugs_legend => 
+ied_plugin_cacheplugs_legend =>
 ied_plugin_cache_not_set => Le paramètre "chemin du cache des plugins" des préférences avancées n'est pas renseigné
 ied_plugin_check_type => Renseignez le type de votre plugin !
 ied_plugin_choose_file => Veuillez choisir d'abord un fichier
@@ -214,7 +214,7 @@ ied_plugin_langs_all => Toutes disponibles
 ied_plugin_langs_installed => Seulement installées
 ied_plugin_lang_choose => Liste des traductions (Textpack)
 ied_plugin_lang_default => Langue par défaut (Textpack)
-ied_plugin_list => 
+ied_plugin_list =>
 ied_plugin_lbl_lc_delete => Supprimer
 ied_plugin_lbl_lc_disable => Désactiver
 ied_plugin_lbl_lc_enable => Activer
@@ -227,9 +227,9 @@ ied_plugin_load => Charger
 ied_plugin_load_order => Ordre de chargement
 ied_plugin_load_order_help => (1=premier > 5=normal > 9=dernier)
 ied_plugin_meta_legend => Meta information
-ied_plugin_meta_save => 
-ied_plugin_meta_saved => 
-ied_plugin_meta_saved_fail => 
+ied_plugin_meta_save =>
+ied_plugin_meta_saved =>
+ied_plugin_meta_saved_fail =>
 ied_plugin_msgpop_lbl => Bloc phpdoc
 ied_plugin_name_first => Veuillez nommer le plugin avant de pouvoir le créer
 ied_plugin_output_order => Orde d'exportation du source PHP
