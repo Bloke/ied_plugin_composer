@@ -4382,7 +4382,9 @@ if (0) {
 ?>
 <!--
 # --- BEGIN PLUGIN HELP ---
-h1. Plugin composer
+h1. ied_plugin_composer
+
+Create, publish and edit plugins from within Textpattern CMS.
 
 Creates a new page under the __Extensions__ tab where you can edit and export plugins that are already installed in Textpattern, as well as create or upload new plugins created by the community.
 
