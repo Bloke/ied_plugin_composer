@@ -4405,15 +4405,19 @@ h2. Features
 * Built-in Textile help viewer (thanks to net-carver's Plugin Help Viewer) to allow you to preview your Help text during development.
 * Set a code "restore point" and roll back to that point if things go sideways. Also useful for returning plugin source code to its as-installed state.
 
-h2. Installation / Uninstallation
+h2. Installation and uninstallation
 
-p(important). Requires Textpattern 4.6.0+
+*Requires Textpattern 4.6.0+*
 
 Download the plugin (v0.5 and above) from "stefdawson.com":http://stefdawson.com/ied_plugin_composer, paste the code into Textpattern's _Admin->Plugins_ page, install and enable the plugin.
 
 The default preferences are automatically created when you install the plugin or visit the setup screen, by clicking the *Setup* button in the top right corner of the _Extensions->Plugin composer_ panel. See the "setup section":#ied_plugin_setup for details.
 
 To remove the plugin composer (noooo!) simply delete it as normal from the _Admin->Plugins_ panel. All the preferences will automatically be removed as well. NOTE: deleting the plugin from the plugin composer window itself *will not* delete the preferences unless you have set the plugin to respond to 'delete' lifecycle events.
+
+Alternatively, this plugin can be installed using "Composer":https://getcomposer.org:
+
+bc. $ composer require bloke/ied_plugin_composer:*
 
 h2(#ied_plugin_list). List panel
 
