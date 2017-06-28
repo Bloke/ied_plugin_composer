@@ -4309,7 +4309,7 @@ EOJS
  * Add prefs callbacks to global scope, since create_pref() can't take
  * array/object syntax.
  *
- * @see  http://forum.textpattern.com/viewtopic.php?pid=298188#p298188
+ * @see  https://forum.textpattern.io/viewtopic.php?pid=298188#p298188
  */
 if (txpinterface === 'admin') {
     /**
@@ -4401,7 +4401,7 @@ h2. Features
 * Support for all plugin types: Library, Public, and Admin (with or without AJAX).
 * Specify a recommended plugin load order if your plugin needs special powers.
 * Documentation can be written in Textile or HTML.
-* Take advantage of the "TinyMCE WYSIWYG editor":http://forum.textpattern.com/viewtopic.php?id=13089 for the help section, or a variety of javascript syntax highlighters / editors for code. See the "setup":#ied_plugin_setup section for more on the available editors.
+* Take advantage of the "TinyMCE WYSIWYG editor":https://forum.textpattern.io/viewtopic.php?id=13089 for the help section, or a variety of javascript syntax highlighters / editors for code. See the "setup":#ied_plugin_setup section for more on the available editors.
 * Built-in Textile help viewer (thanks to net-carver's Plugin Help Viewer) to allow you to preview your Help text during development.
 * Set a code "restore point" and roll back to that point if things go sideways. Also useful for returning plugin source code to its as-installed state.
 
@@ -4480,7 +4480,7 @@ You may also install a plugin just like on the _Admin->Plugins_ panel by copying
 * You can elect to have the plugin auto-enable itself by selecting the appropriate radio button entry prior to clicking _Install_.
 * The radio buttons take on the default settings from the "setup panel":#ied_plugin_setup.
 
-By convention, every plugin should be created with a three-letter prefix, an underscore, then the name of the plugin. You are free to choose your own three-letter prefix (usually your initials) subject to "avoiding ones already taken by other plugin authors":http://docs.textpattern.io/development/plugin-developer-prefixes so people can get to know your work. Plus, it groups your plugins together in the "plugin respository":http://textpattern.org/plugins. All functions, variables (including DOM nodes), CSS classes, Textpack strings and anything else you inject into the global scope should be prefixed by *at least* your three letter code; preferably the whole plugin name (or abridged version thereof) to avoid namespace clashes with your own and other plugins.
+By convention, every plugin should be created with a three-letter prefix, an underscore, then the name of the plugin. You are free to choose your own three-letter prefix (usually your initials) subject to "avoiding ones already taken by other plugin authors":https://docs.textpattern.io/development/plugin-developer-prefixes so people can get to know your work. Plus, it groups your plugins together in the "plugin respository":http://textpattern.org/plugins. All functions, variables (including DOM nodes), CSS classes, Textpack strings and anything else you inject into the global scope should be prefixed by *at least* your three letter code; preferably the whole plugin name (or abridged version thereof) to avoid namespace clashes with your own and other plugins.
 
 h2(#ied_plugin_edit). Edit panel
 
@@ -4584,7 +4584,7 @@ If at any time you want to see the installed textpack strings in other languages
 
 h3. Plugin help
 
-Documentation for detailing the plugin usage. Can (probably should!) be written using "Textile":http://textpattern.com/textile-sandbox. There are some "documentation guidelines":http://docs.textpattern.io/development/plugin-user-help-guidelines that serve as a good starting point. Note that the character countdown here is only approximate because when your plugin is saved and the help is converted to HTML, it usually takes up more space than Textile; please check that your help file renders correctly when your plugin is exported.
+Documentation for detailing the plugin usage. Can (probably should!) be written using "Textile":http://textpattern.com/textile-sandbox. There are some "documentation guidelines":https://docs.textpattern.io/development/plugin-user-help-guidelines that serve as a good starting point. Note that the character countdown here is only approximate because when your plugin is saved and the help is converted to HTML, it usually takes up more space than Textile; please check that your help file renders correctly when your plugin is exported.
 
 The _Style_ box is for any CSS style rules you wish to apply to your documentation, although you should not need this with modern admin themes. You are encouraged to reuse the admin's core CSS rules as often as possible, but if there isn't one that suits, it's best to target your documentation specifically by surrounding the entire Plugin Help section with something like: @<div id="abc_help">h1. Docs go here...</div>@.
 
@@ -4665,7 +4665,7 @@ h2(#ied_plugin_notes). Notes / known issues
 
 h2. Writing a plugin
 
-You should be aware of the "Plugin Author Resources":http://forum.textpattern.com/viewtopic.php?id=9881 topic on the Textpattern Support Forum, and you might also want to have a look at the tutorials and guides for "Plugin development":http://docs.textpattern.io/development/ in the Textpattern documentation.
+You should be aware of the "Plugin Author Resources":https://forum.textpattern.io/viewtopic.php?id=9881 topic on the Textpattern Support Forum, and you might also want to have a look at the tutorials and guides for "Plugin development":https://docs.textpattern.io/development/ in the Textpattern documentation.
 
 Happy plugin authoring :-)
 
