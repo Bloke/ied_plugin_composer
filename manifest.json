@@ -6,5 +6,6 @@
   "author": "Yura Linnyk, Stef Dawson, Steve Dickinson",
   "author_uri": "http://stefdawson.com/",
   "order": 5,
-  "flags": 3
+  "flags": 3,
+  "help": {"file" : ["./README.textile"]}
 }
