@@ -17,8 +17,8 @@ $plugin['name'] = 'ied_plugin_composer';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '1.1.1';
-$plugin['author'] = 'Yura Linnyk / Stef Dawson / Steve Dickinson';
+$plugin['version'] = '1.2.0';
+$plugin['author'] = 'Yura Linnyk, Stef Dawson, Steve Dickinson';
 $plugin['author_uri'] = 'http://stefdawson.com/';
 $plugin['description'] = 'Create, publish and edit plugins from within Textpattern CMS';
 
@@ -169,7 +169,7 @@ ied_plugin_view_help => Help: {name}
 #@language fr-fr
 ied_plugin_any => Tous
 ied_plugin_auto_enable => Activer les plugins dès leur installation
-ied_plugin_cacheplugs_legend => 
+ied_plugin_cacheplugs_legend =>
 ied_plugin_cache_not_set => Le paramètre "chemin du cache des plugins" des préférences avancées n'est pas renseigné
 ied_plugin_check_type => Renseignez le type de votre plugin !
 ied_plugin_choose_file => Veuillez choisir d'abord un fichier
@@ -214,7 +214,7 @@ ied_plugin_langs_all => Toutes disponibles
 ied_plugin_langs_installed => Seulement installées
 ied_plugin_lang_choose => Liste des traductions (Textpack)
 ied_plugin_lang_default => Langue par défaut (Textpack)
-ied_plugin_list => 
+ied_plugin_list =>
 ied_plugin_lbl_lc_delete => Supprimer
 ied_plugin_lbl_lc_disable => Désactiver
 ied_plugin_lbl_lc_enable => Activer
@@ -227,9 +227,9 @@ ied_plugin_load => Charger
 ied_plugin_load_order => Ordre de chargement
 ied_plugin_load_order_help => (1=premier > 5=normal > 9=dernier)
 ied_plugin_meta_legend => Meta information
-ied_plugin_meta_save => 
-ied_plugin_meta_saved => 
-ied_plugin_meta_saved_fail => 
+ied_plugin_meta_save =>
+ied_plugin_meta_saved =>
+ied_plugin_meta_saved_fail =>
 ied_plugin_msgpop_lbl => Bloc phpdoc
 ied_plugin_name_first => Veuillez nommer le plugin avant de pouvoir le créer
 ied_plugin_output_order => Orde d'exportation du source PHP
@@ -4309,7 +4309,7 @@ EOJS
  * Add prefs callbacks to global scope, since create_pref() can't take
  * array/object syntax.
  *
- * @see  http://forum.textpattern.com/viewtopic.php?pid=298188#p298188
+ * @see  https://forum.textpattern.io/viewtopic.php?pid=298188#p298188
  */
 if (txpinterface === 'admin') {
     /**
@@ -4382,7 +4382,9 @@ if (0) {
 ?>
 <!--
 # --- BEGIN PLUGIN HELP ---
-h1. Plugin composer
+h1. ied_plugin_composer
+
+Create, publish and edit plugins from within Textpattern CMS.
 
 Creates a new page under the __Extensions__ tab where you can edit and export plugins that are already installed in Textpattern, as well as create or upload new plugins created by the community.
 
@@ -4399,19 +4401,23 @@ h2. Features
 * Support for all plugin types: Library, Public, and Admin (with or without AJAX).
 * Specify a recommended plugin load order if your plugin needs special powers.
 * Documentation can be written in Textile or HTML.
-* Take advantage of the "TinyMCE WYSIWYG editor":http://forum.textpattern.com/viewtopic.php?id=13089 for the help section, or a variety of javascript syntax highlighters / editors for code. See the "setup":#ied_plugin_setup section for more on the available editors.
+* Take advantage of the "TinyMCE WYSIWYG editor":https://forum.textpattern.io/viewtopic.php?id=13089 for the help section, or a variety of javascript syntax highlighters / editors for code. See the "setup":#ied_plugin_setup section for more on the available editors.
 * Built-in Textile help viewer (thanks to net-carver's Plugin Help Viewer) to allow you to preview your Help text during development.
 * Set a code "restore point" and roll back to that point if things go sideways. Also useful for returning plugin source code to its as-installed state.
 
-h2. Installation / Uninstallation
+h2. Installation and uninstallation
 
-p(important). Requires Textpattern 4.6.0+
+*Requires Textpattern 4.6.0+*
 
 Download the plugin (v0.5 and above) from "stefdawson.com":http://stefdawson.com/ied_plugin_composer, paste the code into Textpattern's _Admin->Plugins_ page, install and enable the plugin.
 
 The default preferences are automatically created when you install the plugin or visit the setup screen, by clicking the *Setup* button in the top right corner of the _Extensions->Plugin composer_ panel. See the "setup section":#ied_plugin_setup for details.
 
 To remove the plugin composer (noooo!) simply delete it as normal from the _Admin->Plugins_ panel. All the preferences will automatically be removed as well. NOTE: deleting the plugin from the plugin composer window itself *will not* delete the preferences unless you have set the plugin to respond to 'delete' lifecycle events.
+
+Alternatively, this plugin can be installed using "Composer":https://getcomposer.org:
+
+bc. $ composer require bloke/ied_plugin_composer:*
 
 h2(#ied_plugin_list). List panel
 
@@ -4474,7 +4480,7 @@ You may also install a plugin just like on the _Admin->Plugins_ panel by copying
 * You can elect to have the plugin auto-enable itself by selecting the appropriate radio button entry prior to clicking _Install_.
 * The radio buttons take on the default settings from the "setup panel":#ied_plugin_setup.
 
-By convention, every plugin should be created with a three-letter prefix, an underscore, then the name of the plugin. You are free to choose your own three-letter prefix (usually your initials) subject to "avoiding ones already taken by other plugin authors":http://docs.textpattern.io/development/plugin-developer-prefixes so people can get to know your work. Plus, it groups your plugins together in the "plugin respository":http://textpattern.org/plugins. All functions, variables (including DOM nodes), CSS classes, Textpack strings and anything else you inject into the global scope should be prefixed by *at least* your three letter code; preferably the whole plugin name (or abridged version thereof) to avoid namespace clashes with your own and other plugins.
+By convention, every plugin should be created with a three-letter prefix, an underscore, then the name of the plugin. You are free to choose your own three-letter prefix (usually your initials) subject to "avoiding ones already taken by other plugin authors":https://docs.textpattern.io/development/plugin-developer-prefixes so people can get to know your work. Plus, it groups your plugins together in the "plugin respository":http://textpattern.org/plugins. All functions, variables (including DOM nodes), CSS classes, Textpack strings and anything else you inject into the global scope should be prefixed by *at least* your three letter code; preferably the whole plugin name (or abridged version thereof) to avoid namespace clashes with your own and other plugins.
 
 h2(#ied_plugin_edit). Edit panel
 
@@ -4578,7 +4584,7 @@ If at any time you want to see the installed textpack strings in other languages
 
 h3. Plugin help
 
-Documentation for detailing the plugin usage. Can (probably should!) be written using "Textile":http://textpattern.com/textile-sandbox. There are some "documentation guidelines":http://docs.textpattern.io/development/plugin-user-help-guidelines that serve as a good starting point. Note that the character countdown here is only approximate because when your plugin is saved and the help is converted to HTML, it usually takes up more space than Textile; please check that your help file renders correctly when your plugin is exported.
+Documentation for detailing the plugin usage. Can (probably should!) be written using "Textile":http://textpattern.com/textile-sandbox. There are some "documentation guidelines":https://docs.textpattern.io/development/plugin-user-help-guidelines that serve as a good starting point. Note that the character countdown here is only approximate because when your plugin is saved and the help is converted to HTML, it usually takes up more space than Textile; please check that your help file renders correctly when your plugin is exported.
 
 The _Style_ box is for any CSS style rules you wish to apply to your documentation, although you should not need this with modern admin themes. You are encouraged to reuse the admin's core CSS rules as often as possible, but if there isn't one that suits, it's best to target your documentation specifically by surrounding the entire Plugin Help section with something like: @<div id="abc_help">h1. Docs go here...</div>@.
 
@@ -4659,7 +4665,7 @@ h2(#ied_plugin_notes). Notes / known issues
 
 h2. Writing a plugin
 
-You should be aware of the "Plugin Author Resources":http://forum.textpattern.com/viewtopic.php?id=9881 topic on the Textpattern Support Forum, and you might also want to have a look at the tutorials and guides for "Plugin development":http://docs.textpattern.io/development/ in the Textpattern documentation.
+You should be aware of the "Plugin Author Resources":https://forum.textpattern.io/viewtopic.php?id=9881 topic on the Textpattern Support Forum, and you might also want to have a look at the tutorials and guides for "Plugin development":https://docs.textpattern.io/development/ in the Textpattern documentation.
 
 Happy plugin authoring :-)
 
