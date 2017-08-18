@@ -1,7 +1,7 @@
 {
   "name": "ied_plugin_composer",
   "description": "Create, publish and edit plugins from within Textpattern CMS",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": 5,
   "author": "Yura Linnyk, Stef Dawson, Steve Dickinson",
   "author_uri": "http://stefdawson.com/",

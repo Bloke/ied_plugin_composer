@@ -17,7 +17,7 @@ $plugin['name'] = 'ied_plugin_composer';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '1.2.0';
+$plugin['version'] = '1.2.1';
 $plugin['author'] = 'Yura Linnyk, Stef Dawson, Steve Dickinson';
 $plugin['author_uri'] = 'http://stefdawson.com/';
 $plugin['description'] = 'Create, publish and edit plugins from within Textpattern CMS';
@@ -459,7 +459,7 @@ if (txpinterface === 'admin') {
         $tp_prefixes = unserialize(get_pref('ied_plugin_tp_prefix', ''));
 
         if (isset($tp_prefixes[$theName])) {
-            $strings = $this->textpack_grab($lang, $tp_prefixes[$theName]);
+            $strings = ied_plugin_textpack_grab($lang, $tp_prefixes[$theName]);
             foreach ($strings as $row) {
                 if (array_search($row['lang'], $langs) === false) {
                     $langs[] = $row['lang'];
@@ -1432,7 +1432,7 @@ EOJS
         $op_langs[] = '</select>';
 
         $tp_strings = array();
-        $tp_rows = $this->textpack_grab($dflt_lang, $tp_pfx);
+        $tp_rows = ied_plugin_textpack_grab($dflt_lang, $tp_pfx);
         foreach ($tp_rows as $tp_string) {
             $apsel = selectInput('ied_plugin_tp_event', array('admin' => gTxt('admin'), 'public' => gTxt('public'), 'common' => gTxt('both')), ($tp_string['event'] == 'public' ? 'public' : ($tp_string['event'] == 'common' ? 'common' : 'admin')) );
             $tp_strings[] = '<li>'.fInput('text', 'textpack_'.$tp_string['name'], $tp_string['data']).' '.$apsel.' <label>'.$tp_string['name'].'</label>'.'</li>';
@@ -3502,7 +3502,7 @@ EOJS
 
             $tp_pfx = unserialize(get_pref('ied_plugin_tp_prefix', '', 1));
             $tp_pfx = isset($tp_pfx[$name]) ? $tp_pfx[$name] : '';
-            $tp_rows = $this->textpack_grab($fetch_lang, $tp_pfx);
+            $tp_rows = ied_plugin_textpack_grab($fetch_lang, $tp_pfx);
 
             if ($tp_rows) {
                 $ctr = 0;
@@ -3564,26 +3564,6 @@ EOJS
         }
 
         return implode(n, $tpout);
-    }
-
-    /**
-     * Read textpack strings with the given prefix from the database.
-     *
-     * @param  string $lang   Language of strings to fetch
-     * @param  string $prefix Prefix to find
-     * @return array          Record set of matching strings
-     */
-    public function textpack_grab($lang, $prefix)
-    {
-        if ($lang === 'IED_ALL') {
-            $lang_query = '';
-        } else {
-            $lang = (empty($lang)) ? get_pref('language', 'en-gb') : $lang;
-            $langs = quote_list(do_list($lang));
-            $lang_query = "lang IN (".implode(', ', $langs).") AND ";
-        }
-
-        return ($prefix) ? safe_rows('name, data, lang, event', 'txp_lang', $lang_query."name LIKE '".doSlash($prefix)."%' ORDER BY event,lang,name") : array();
     }
 
     /**
@@ -4377,6 +4357,27 @@ if (txpinterface === 'admin') {
         return selectInput($name, $langs, $val, false);
     }
 }
+
+/**
+ * Read textpack strings with the given prefix from the database.
+ *
+ * @param  string $lang   Language of strings to fetch
+ * @param  string $prefix Prefix to find
+ * @return array          Record set of matching strings
+ */
+function ied_plugin_textpack_grab($lang, $prefix)
+{
+    if ($lang === 'IED_ALL') {
+        $lang_query = '';
+    } else {
+        $lang = (empty($lang)) ? get_pref('language', 'en-gb') : $lang;
+        $langs = quote_list(do_list($lang));
+        $lang_query = "lang IN (".implode(', ', $langs).") AND ";
+    }
+
+    return ($prefix) ? safe_rows('name, data, lang, event', 'txp_lang', $lang_query."name LIKE '".doSlash($prefix)."%' ORDER BY event,lang,name") : array();
+}
+
 # --- END PLUGIN CODE ---
 if (0) {
 ?>
