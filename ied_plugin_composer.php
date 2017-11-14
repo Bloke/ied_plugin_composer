@@ -17,7 +17,7 @@ $plugin['name'] = 'ied_plugin_composer';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '1.2.1';
+$plugin['version'] = '1.3.0';
 $plugin['author'] = 'Yura Linnyk, Stef Dawson, Steve Dickinson';
 $plugin['author_uri'] = 'http://stefdawson.com/';
 $plugin['description'] = 'Create, publish and edit plugins from within Textpattern CMS';
@@ -56,6 +56,7 @@ $plugin['flags'] = '3';
 
 $plugin['textpack'] = <<<EOT
 #@ied_plugin
+#@language en-gb
 ied_plugin_any => Any
 ied_plugin_auto_enable => Auto-enable plugins on install
 ied_plugin_cacheplugs_legend => Plugins in cache directory
@@ -104,7 +105,6 @@ ied_plugin_langs_all => All available
 ied_plugin_langs_installed => Only installed
 ied_plugin_lang_choose => Textpack language list
 ied_plugin_lang_default => Default textpack language
-ied_plugin_list => Plugin list
 ied_plugin_lbl_lc_delete => Delete
 ied_plugin_lbl_lc_disable => Disable
 ied_plugin_lbl_lc_disdel => Disable+Delete
@@ -117,6 +117,7 @@ ied_plugin_lbl_setup => Plugin composer setup
 ied_plugin_lc_fired => Lifecycle event {event} fired for {name}
 ied_plugin_lifecycle => Fire lifecycle event
 ied_plugin_lifecycle_options => Perform lifecycle actions on
+ied_plugin_list => Plugin list
 ied_plugin_load => Load
 ied_plugin_load_order => Load order
 ied_plugin_load_order_help => (1=first > 5=normal > 9=last)
@@ -166,10 +167,10 @@ ied_plugin_utils_legend => Distribution
 ied_plugin_utils_legend_extra => Only for use after saving
 ied_plugin_view_help => Help: {name}
 #@ied_plugin
-#@language fr-fr
+#@language fr
 ied_plugin_any => Tous
 ied_plugin_auto_enable => Activer les plugins dès leur installation
-ied_plugin_cacheplugs_legend =>
+ied_plugin_cacheplugs_legend => Les Plugins sont chargés depuis le cache
 ied_plugin_cache_not_set => Le paramètre "chemin du cache des plugins" des préférences avancées n'est pas renseigné
 ied_plugin_check_type => Renseignez le type de votre plugin !
 ied_plugin_choose_file => Veuillez choisir d'abord un fichier
@@ -214,7 +215,6 @@ ied_plugin_langs_all => Toutes disponibles
 ied_plugin_langs_installed => Seulement installées
 ied_plugin_lang_choose => Liste des traductions (Textpack)
 ied_plugin_lang_default => Langue par défaut (Textpack)
-ied_plugin_list =>
 ied_plugin_lbl_lc_delete => Supprimer
 ied_plugin_lbl_lc_disable => Désactiver
 ied_plugin_lbl_lc_enable => Activer
@@ -227,9 +227,6 @@ ied_plugin_load => Charger
 ied_plugin_load_order => Ordre de chargement
 ied_plugin_load_order_help => (1=premier > 5=normal > 9=dernier)
 ied_plugin_meta_legend => Meta information
-ied_plugin_meta_save =>
-ied_plugin_meta_saved =>
-ied_plugin_meta_saved_fail =>
 ied_plugin_msgpop_lbl => Bloc phpdoc
 ied_plugin_name_first => Veuillez nommer le plugin avant de pouvoir le créer
 ied_plugin_output_order => Orde d'exportation du source PHP
@@ -3440,32 +3437,16 @@ EOJS
         $ied_langs = array();
 
         if ($flavour === 'installed') {
-            // Self-join to get all the installed langs and language strings in one step.
-//            $installed_langs = safe_query('select t1.lang, t2.data from '.PFX.'txp_lang as t1, '.PFX.'txp_lang as t2 WHERE t1.lang = t2.name GROUP BY lang');
-            $ied_langs = safe_column('lang', 'txp_lang', '1=1 GROUP BY lang');
+            $ied_langs = Txp::get('\Textpattern\L10n\Lang')->available(TEXTPATTERN_LANG_ACTIVE | TEXTPATTERN_LANG_INSTALLED);
         } else {
-            // Grab all available langs from the RPC server.
-            require_once txpath.'/lib/IXRClass.php';
-
-            $client = new IXR_Client(RPC_SERVER);
-
-            // Get items from RPC.
-            @set_time_limit(5);
-
-            if ($client->query('tups.listLanguages', get_pref('blog_uid'))) {
-                $response = $client->getResponse();
-
-                foreach ($response as $language) {
-                    $ied_langs[] = $language['language'];
-                }
-            }
+            $ied_langs = Txp::get('\Textpattern\L10n\Lang')->available();
         }
 
         // Build the select list array.
         $langlist = array();
 
-        foreach ($ied_langs as $ied_lang) {
-            $langlist[$ied_lang] = gTxt($ied_lang);
+        foreach ($ied_langs as $ied_lang => $langdata) {
+            $langlist[$ied_lang] = $langdata['name'];
         }
 
         return $langlist;
@@ -3527,10 +3508,6 @@ EOJS
                 ksort($tplang);
 
                 // Build the final textpack array with language markers.
-                // Note the marker for the default language may (should!) be omitted if the author wants
-                // the strings to be installed regardless of language on destination server.
-                // If a specific language is set and the user does not have that language
-                // installed, the strings would not be inserted.
                 $prevevent = '';
 
                 foreach ($tplang as $idx => $langblock) {
@@ -3543,9 +3520,7 @@ EOJS
                         }
 
                         foreach ($codeblock as $code => $data) {
-                            if (($idx == 0 && $chosen_lang) || ($idx > 0)) {
-                                $tpheader[] = '#@language ' . $code;
-                            }
+                            $tpheader[] = '#@language ' . $code;
 
                             foreach ($data as $key => $val) {
                                 // Don't output empty strings.
@@ -4377,7 +4352,6 @@ function ied_plugin_textpack_grab($lang, $prefix)
 
     return ($prefix) ? safe_rows('name, data, lang, event', 'txp_lang', $lang_query."name LIKE '".doSlash($prefix)."%' ORDER BY event,lang,name") : array();
 }
-
 # --- END PLUGIN CODE ---
 if (0) {
 ?>
