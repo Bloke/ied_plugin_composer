@@ -2516,22 +2516,24 @@ EOJS
 
         if ($plugin_create) {
             $fname = '';
+
             if ($name == '') {
                 $this->table(array(gTxt('ied_plugin_name_first'), E_ERROR));
 
 
                 return;
             }
+
             if (strpos($name, ".php") !== false) {
                 $fname = $name;
                 $name = basename($name, ".php");
             }
+
             $exists = fetch('name', 'txp_plugin', 'name', $name);
 
             // MySQL defaults to set status=1 so we need to explicitly override this if this
             // is a fresh installation
-            $state = ($ied_plugin_autoenable==1) ? 1 : 0;
-
+            $state = ($ied_plugin_autoenable == 1) ? 1 : 0;
 
             if (!$exists) {
                 if ($fname) {
@@ -2580,7 +2582,6 @@ EOJS
 
             if ($ext == 'php') {
                 $plugin = $this->read_file($_FILES['thefile']['tmp_name']);
-//  $newname = (empty($plugin['name'])) ? basename($_FILES['thefile']['name'], '.php') : $plugin['name'];
                 $newname = ($name) ? $name : doSlash($plugin['name']);
 
                 if (empty($plugin['code'])) {
@@ -2595,8 +2596,8 @@ EOJS
                 $exists = fetch('name', 'txp_plugin', 'name', $newname);
 
                 // MySQL defaults to set status=1 so we need to explicitly override this if this
-                // is a fresh installation
-                $state = ($ied_plugin_autoenable==1) ? 'status=1,' : ($exists && ($ied_plugin_autoenable==2) ? '' : 'status=0,');
+                // is a fresh installation.
+                $state = ($ied_plugin_autoenable == 1) ? 'status=1,' : ($exists && ($ied_plugin_autoenable == 2) ? '' : 'status=0,');
 
                 $fields = "
                         type         = ".intval($type).",
@@ -2610,7 +2611,7 @@ EOJS
                         code_md5     = '".$md5."',
                         textpack     = '".@$textpack."',
                         data         = '".@$data."',
-                        flags        = ".intval($flags)."
+                        flags        = ".intval($flags).",
                         load_order   = ".intval($load_order)
                 ;
 
