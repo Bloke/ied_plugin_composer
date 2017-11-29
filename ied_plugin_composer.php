@@ -2555,7 +2555,9 @@ EOJS
                         description='',
                         help='',
                         code='',
-                        code_restore=''
+                        code_restore='',
+                        textpack='',
+                        data=''
                     ");
                     $this->edit(gTxt('ied_plugin_edit_new'), $name);
                 }
@@ -2596,40 +2598,33 @@ EOJS
                 // is a fresh installation
                 $state = ($ied_plugin_autoenable==1) ? 'status=1,' : ($exists && ($ied_plugin_autoenable==2) ? '' : 'status=0,');
 
+                $fields = "
+                        type         = ".intval($type).",
+                        author       = '".$author."',
+                        author_uri   = '".$author_uri."',
+                        version      = '".$version."',
+                        description  = '".$description."',
+                        help         = '".$help."',
+                        code         = '".$code."',
+                        code_restore = '".$code."',
+                        code_md5     = '".$md5."',
+                        textpack     = '".@$textpack."',
+                        data         = '".@$data."',
+                        flags        = ".intval($flags)."
+                        load_order   = ".intval($load_order)
+                ;
+
                 if ($exists) {
-                    // Note: status omitted so it retains its value
                     $rs = safe_update(
                         "txp_plugin",
-                        "$state
-                        type = ".intval($type).",
-                        author = '$author',
-                        author_uri = '$author_uri',
-                        version = '$version',
-                        description = '$description',
-                        help = '$help',
-                        code = '$code',
-                        code_restore = '$code',
-                        code_md5 = '$md5',
-                        flags = ".intval($flags).",
-                        load_order = ".intval($load_order),
+                        $state.$fields,
                         "name = '$newname'"
                     );
                 } else {
                     $rs = safe_insert(
                         "txp_plugin",
-                        "name = '$newname',
-                        $state
-                        type = ".intval($type).",
-                        author = '$author',
-                        author_uri = '$author_uri',
-                        version = '$version',
-                        description = '$description',
-                        help = '$help',
-                        code = '$code',
-                        code_restore = '$code',
-                        code_md5 = '$md5',
-                        flags = ".intval($flags).",
-                        load_order = ".intval($load_order)
+                        "name = '$newname',".
+                        $state.$fields
                     );
                 }
 
