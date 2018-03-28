@@ -55,8 +55,9 @@ $plugin['flags'] = '3';
 // abc_string_name => Localized String
 
 $plugin['textpack'] = <<<EOT
+#@owner ied_plugin
 #@ied_plugin
-#@language en-gb
+#@language en, en-gb, en-ca, en-us
 ied_plugin_any => Any
 ied_plugin_auto_enable => Auto-enable plugins on install
 ied_plugin_cacheplugs_legend => Plugins in cache directory
@@ -166,7 +167,6 @@ ied_plugin_upload_php => Upload plugin
 ied_plugin_utils_legend => Distribution
 ied_plugin_utils_legend_extra => Only for use after saving
 ied_plugin_view_help => Help: {name}
-#@ied_plugin
 #@language fr
 ied_plugin_any => Tous
 ied_plugin_auto_enable => Activer les plugins dès leur installation
@@ -301,7 +301,7 @@ if (txpinterface === 'admin') {
     new ied_pc();
 } elseif (txpinterface === 'public') {
     if (class_exists('\Textpattern\Tag\Registry')) {
-        Txp::get('\Textpattern\Tag\Registry')
+        \Txp::get('\Textpattern\Tag\Registry')
             ->register('ied_plugin_list')
             ->register('ied_plugin_info')
             ->register('ied_plugin_textpacks')
@@ -345,9 +345,11 @@ if (txpinterface === 'admin') {
         if (in_array('database', $location)) {
             $sql = array();
             $sql[] = '1';
+
             if ($name) {
                 $sql[] = "name IN ('".implode("','", doSlash($names))."')";
             }
+
             if ($prefix) {
                 $sqlor = array();
                 foreach ($prefixes as $pfx) {
@@ -355,6 +357,7 @@ if (txpinterface === 'admin') {
                 }
                 $sql[] = '(' . implode(' OR ', $sqlor) . ')';
             }
+
             if ($exclude) {
                 $sql[] = "name NOT IN ('".implode("','", doSlash($excludes))."')";
             }
@@ -453,10 +456,11 @@ if (txpinterface === 'admin') {
         $thing = (empty($form)) ? ((empty($thing)) ? '<txp:ied_plugin_info item="lang" />' : $thing) : fetch_form($form);
 
         $langs = array();
-        $tp_prefixes = unserialize(get_pref('ied_plugin_tp_prefix', ''));
+        $tp_prefixes = json_decode(get_pref('ied_plugin_tp_prefix', ''));
 
         if (isset($tp_prefixes[$theName])) {
             $strings = ied_plugin_textpack_grab($lang, $tp_prefixes[$theName]);
+
             foreach ($strings as $row) {
                 if (array_search($row['lang'], $langs) === false) {
                     $langs[] = $row['lang'];
@@ -513,10 +517,13 @@ if (txpinterface === 'admin') {
         }
 
         $theClass = '';
+
         if ($class) {
             $theClass = ' class="'.$class.'"';
         }
+
         $langopt = '';
+
         if ($lang) {
             $langs = do_list($lang);
             $langopt = $amp.'lang='.implode(',', $langs);
@@ -1340,7 +1347,7 @@ EOJS
 
         for ($i = 1; $i <= 9; $i++) $orders[$i] = $i;
 
-        $tp_pfx = unserialize(get_pref('ied_plugin_tp_prefix', '', 1));
+        $tp_pfx = json_decode(get_pref('ied_plugin_tp_prefix', '', 1));
         $tp_pfx = isset($tp_pfx[$name]) ? $tp_pfx[$name] : '';
 
         $fnames = $this->get_name($name, $version);
@@ -3477,7 +3484,7 @@ EOJS
             // Guard against situations when the chosen default lang is 'any'.
             $dflt_lang = ($chosen_lang === '') ? get_pref('language') : $chosen_lang;
 
-            $tp_pfx = unserialize(get_pref('ied_plugin_tp_prefix', '', 1));
+            $tp_pfx = json_decode(get_pref('ied_plugin_tp_prefix', '', 1));
             $tp_pfx = isset($tp_pfx[$name]) ? $tp_pfx[$name] : '';
             $tp_rows = ied_plugin_textpack_grab($fetch_lang, $tp_pfx);
 
@@ -3561,9 +3568,15 @@ EOJS
         $pfx = ($pfx) ? $pfx : gps('prefix');
 
         if ($pfx) {
-            $curr_pfx = unserialize(get_pref('ied_plugin_tp_prefix'));
-            $curr_pfx[$plugname] = $pfx;
-            set_pref('ied_plugin_tp_prefix', serialize($curr_pfx), 'ied_plugin', PREF_HIDDEN, 'text_input');
+            $curr_pfx = json_decode(get_pref('ied_plugin_tp_prefix'));
+
+            if (is_array($curr_pfx)) {
+                $curr_pfx[$plugname] = $pfx;
+            } else {
+                $curr_pfx = array();
+            }
+
+            set_pref('ied_plugin_tp_prefix', json_encode($curr_pfx), 'ied_plugin', PREF_HIDDEN, 'text_input');
         }
     }
 
