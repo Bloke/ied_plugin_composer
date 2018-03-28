@@ -456,7 +456,7 @@ if (txpinterface === 'admin') {
         $thing = (empty($form)) ? ((empty($thing)) ? '<txp:ied_plugin_info item="lang" />' : $thing) : fetch_form($form);
 
         $langs = array();
-        $tp_prefixes = json_decode(get_pref('ied_plugin_tp_prefix', ''));
+        $tp_prefixes = json_decode(get_pref('ied_plugin_tp_prefix', ''), true);
 
         if (isset($tp_prefixes[$theName])) {
             $strings = ied_plugin_textpack_grab($lang, $tp_prefixes[$theName]);
@@ -1347,7 +1347,7 @@ EOJS
 
         for ($i = 1; $i <= 9; $i++) $orders[$i] = $i;
 
-        $tp_pfx = json_decode(get_pref('ied_plugin_tp_prefix', '', 1));
+        $tp_pfx = json_decode(get_pref('ied_plugin_tp_prefix', '', 1), true);
         $tp_pfx = isset($tp_pfx[$name]) ? $tp_pfx[$name] : '';
 
         $fnames = $this->get_name($name, $version);
@@ -3484,7 +3484,7 @@ EOJS
             // Guard against situations when the chosen default lang is 'any'.
             $dflt_lang = ($chosen_lang === '') ? get_pref('language') : $chosen_lang;
 
-            $tp_pfx = json_decode(get_pref('ied_plugin_tp_prefix', '', 1));
+            $tp_pfx = json_decode(get_pref('ied_plugin_tp_prefix', '', 1), true);
             $tp_pfx = isset($tp_pfx[$name]) ? $tp_pfx[$name] : '';
             $tp_rows = ied_plugin_textpack_grab($fetch_lang, $tp_pfx);
 
@@ -3568,14 +3568,13 @@ EOJS
         $pfx = ($pfx) ? $pfx : gps('prefix');
 
         if ($pfx) {
-            $curr_pfx = json_decode(get_pref('ied_plugin_tp_prefix'));
+            $curr_pfx = json_decode(get_pref('ied_plugin_tp_prefix'), true);
 
-            if (is_array($curr_pfx)) {
-                $curr_pfx[$plugname] = $pfx;
-            } else {
+            if (!is_array($curr_pfx)) {
                 $curr_pfx = array();
             }
 
+            $curr_pfx[$plugname] = $pfx;
             set_pref('ied_plugin_tp_prefix', json_encode($curr_pfx), 'ied_plugin', PREF_HIDDEN, 'text_input');
         }
     }
