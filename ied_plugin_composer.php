@@ -1406,7 +1406,7 @@ EOJS
 
         // Language info. ied_visible_langs is the user's choice of which ones they want to see available.
         // ied_available_langs is the list of actual, currently-installed langs.
-        $theLang = get_pref('language');
+        $theLang = get_pref('language_ui', TEXTPATTERN_DEFAULT_LANG);
         $string_count = ($tp_pfx) ? safe_rows('lang, count(*) as count', 'txp_lang', "name like '".$tp_pfx."%' group by lang") : array();
         $ied_listlangs = get_pref('ied_plugin_lang_choose', 'installed');
         $ied_visible_langs = self::lang_list($ied_listlangs);
@@ -3482,6 +3482,7 @@ EOJS
             $chosen_lang = get_pref('ied_plugin_lang_default', '');
 
             // Guard against situations when the chosen default lang is 'any'.
+            // Use the site language here, not the admin-side language.
             $dflt_lang = ($chosen_lang === '') ? get_pref('language') : $chosen_lang;
 
             $tp_pfx = json_decode(get_pref('ied_plugin_tp_prefix', '', 1), true);
@@ -4353,7 +4354,7 @@ function ied_plugin_textpack_grab($lang, $prefix)
     if ($lang === 'IED_ALL') {
         $lang_query = '';
     } else {
-        $lang = (empty($lang)) ? get_pref('language', 'en-gb') : $lang;
+        $lang = (empty($lang)) ? get_pref('language_ui', TEXTPATTERN_DEFAULT_LANG) : $lang;
         $langs = quote_list(do_list($lang));
         $lang_query = "lang IN (".implode(', ', $langs).") AND ";
     }
