@@ -76,7 +76,6 @@ ied_plugin_cpanel_legend => Installation
 ied_plugin_create_new => Create new plugin
 ied_plugin_dbplugs_legend => Plugins in database
 ied_plugin_dist_legend => Distribution
-ied_plugin_docs => Docs
 ied_plugin_docs_legend => Plugin help
 ied_plugin_edit => Edit: {name} v{version}
 ied_plugin_editing => Editing {name} in Plugin Composer
@@ -187,7 +186,6 @@ ied_plugin_cpanel_legend => Installation
 ied_plugin_create_new => Créer un nouveau plugin
 ied_plugin_dbplugs_legend => Plugins disponibles
 ied_plugin_dist_legend => Distribution
-ied_plugin_docs => Docs
 ied_plugin_docs_legend => Aide du plugin
 ied_plugin_edit => Éditer : {name} v{version}
 ied_plugin_editing => Édition de {name} depuis Plugin Composer
@@ -860,7 +858,7 @@ class ied_pc
             foreach ($rs as $row) {
                 extract($row);
                 $ename = $this->anchor($this->ied_pc_event, 'edit', $name, array('name' => $name));
-                $hlink = ($help) ? $this->anchor($this->ied_pc_event, 'help_viewer', gTxt('ied_plugin_docs'), array('name' => $name)) : gTxt('none');
+                $hlink = ($help) ? $this->anchor($this->ied_pc_event, 'help_viewer', gTxt('help'), array('name' => $name)) : gTxt('none');
                 $fnames = $this->get_name($name, $version);
                 $pubtag = $this->anchor($this->ied_pc_event, 'save_as_file', gTxt('publish'), array('name' => $name), array('title' => gTxt('ied_plugin_export', array('{name}' => $fnames[0]))));
                 $pubztag = $this->anchor($this->ied_pc_event, 'save_as_file', gTxt('ied_plugin_compress'), array('name' => $name, 'type' => 'zip'), array('title' => gTxt('ied_plugin_export', array('{name}' => $fnames[1]))));
@@ -919,7 +917,7 @@ class ied_pc
                 if ($fileext=='php') {
                     $basename = basename($filename);
                     $plugin = $this->read_file($pcd . DS . $filename);
-                    $hlink = ($plugin['help']) ? $this->anchor($this->ied_pc_event, 'help_viewer', gTxt('ied_plugin_docs'), array('filename' => $filename)) : gTxt('none');
+                    $hlink = ($plugin['help']) ? $this->anchor($this->ied_pc_event, 'help_viewer', gTxt('help'), array('filename' => $filename)) : gTxt('none');
                     $efile = $this->anchor($this->ied_pc_event, 'edit', $plugin['name'], array('filename' => $filename));
                     $fnames = $this->get_name($plugin['name'], $plugin['version']);
                     $plugpref = (($plugin['flags'] & PLUGIN_HAS_PREFS)) ? ' '.$this->anchor('plugin_prefs.'.urlencode($plugin['name']), '', ' ['.gTxt('options').']') : '';
@@ -1368,7 +1366,7 @@ EOJS
         $sziplink = $this->anchor($this->ied_pc_event, 'save_as_file', gTxt('ied_plugin_export_zip', array('{name}' => $fnames[1])), $zippedLink);
         $sphplink = $this->anchor($this->ied_pc_event, 'save_as_php_file', gTxt('ied_plugin_save_as', array('{name}' => $fnames[2])), $namedLink);
         $stxtlink = $this->anchor($this->ied_pc_event, 'save_as_textpack', gTxt('ied_plugin_export_textpack'), $namedLink);
-        $vhelplinkfull = ($help) ? '[ ' .$this->anchor($this->ied_pc_event, 'help_viewer', gTxt('ied_plugin_docs'), $namedLink) . ' ]' : '';
+        $vhelplinkfull = ($help) ? '[ ' .$this->anchor($this->ied_pc_event, 'help_viewer', gTxt('view'), $namedLink) . ' ]' : '';
 
         $msgpop = '<div id="ied_plugin_msgpop"><input type="button" class="publish" value="'.gTxt('ok').'" onclick="ied_plugin_toggle_msgpop(\'0\');" /><h2>'.gTxt('ied_plugin_msgpop_lbl').'</h2><span class="ied_plugin_msgpop_content"></span></div>';
 
@@ -1599,7 +1597,6 @@ EOJS
                 .n. '<div class="txp-form-field-value">'
                 .n. fInput('text', 'ied_plugin_tp_populate', '', '', '', '', '', '', 'ied_plugin_tp_populate')
                 .n. '<button id="ied_plugin_tp_load">' . gTxt('go') . '</button>'
-                .n. '<span id="ied_plugin_tp_load_count"></span>'
                 .n. '</div>'
                 .n. '</div>'
                 .n. '<a href="#" id="ied_plugin_add_string" class="txp-button">+</a>'
@@ -1611,7 +1608,7 @@ EOJS
                 .n. '<section class="txp-prefs-group" id="options_group_docs" aria-labelledby="options_group_docs-label">'
                 .n. hed(gTxt('ied_plugin_docs_legend') . n . $vhelplinkfull, 2, array('id' => 'options_group_docs-label'))
                 .n. '<div class="txp-form-field txp-form-field-textarea">'
-                .n. '<div class="txp-form-field-label"><label for="plugin_help">' . gTxt('text') . '</label></div>'
+                .n. '<div class="txp-form-field-label"><label for="plugin_help">' . gTxt('documentation') . '</label></div>'
                 .n. '<div class="txp-form-field-value">' . $help_widget . '</div>'
                 .n. '</div>'
                 .n. (($styleblock)
@@ -2028,47 +2025,43 @@ jQuery(function () {
 
     // Handle language change.
     jQuery("#ied_plugin_tp_lang").change(function (event) {
-        jQuery('#ied_plugin_tp_load_count').empty().show();
-
         var tp_lng = jQuery(this).val();
         var tp_dflt = jQuery('#ied_plugin_tp_lang_dflt').val();
         var sel = '#options_group_pack ul li';
-        var numStrings = sel.length;
-        var numFetched = 0;
+        var lbls = jQuery(sel).find('label').map(function () { return $(this).text() }).get().join(', ');
 
-        jQuery(sel).each(function () {
-            var obj = jQuery(this);
-            var tp_lbl = obj.find('label').text();
-            var tp_dest = obj.find('input');
+        sendAsyncEvent(
+        {
+            event: textpattern.event,
+            step: 'textpack_get',
+            ied_tp_lbl: lbls,
+            ied_tp_lng: tp_lng,
+            ied_tp_dflt: tp_dflt
+        }, function (data) {
+            var theVals = data.ied_plugin_tp_string;
+            var xl8strs = data.ied_plugin_tp_dflt;
 
-            sendAsyncEvent(
-            {
-                event: textpattern.event,
-                step: 'textpack_get',
-                ied_tp_lbl: tp_lbl,
-                ied_tp_lng: tp_lng,
-                ied_tp_dflt: tp_dflt
-            }, function (data) {
-                numFetched++;
-                var theVal = data.ied_plugin_tp_string;
-                var xl8str = data.ied_plugin_tp_dflt;
+            jQuery(sel).each(function () {
+                var obj = jQuery(this);
+                var tp_lbl = obj.find('label').text();
+                var tp_dest = obj.find('input');
 
-                tp_dest.val(theVal);
+                tp_dest.val(theVals[tp_lbl]);
 
-                if (xl8str == undefined || xl8str == '') {
-                    obj.removeAttr('title');
-                } else {
-                    obj.attr('title', xl8str);
+                if (xl8strs !== undefined) {
+                    var xl8str = xl8strs[tp_lbl];
+
+                    if (xl8str == undefined || xl8str == '') {
+                        obj.removeAttr('title');
+                    } else {
+                        obj.attr('title', xl8str);
+                    }
                 }
-                if (numFetched < ied_plugin_tp_total) {
-                    jQuery('#ied_plugin_tp_load_count').text(numFetched + '/' + ied_plugin_tp_total);
-                } else {
-                    jQuery('#ied_plugin_tp_load_count').text('OK').hide('slow');
-                    ied_plugin_update_tp_count();
-                }
-            },
-            'json');
-        });
+            });
+
+            ied_plugin_update_tp_count();
+        },
+        'json');
     });
 
     // Current language refresh.
@@ -3787,28 +3780,28 @@ EOJS
     }
 
     /**
-     * Ajax: Fetch a Textpack string from the database.
+     * Ajax: Fetch a set of Textpack strings from the database.
      *
      * Requires POST variables:
-     *  param  string ied_tp_lbl  The language label (key)
+     *  param  string ied_tp_lbl  The language labels (keys)
      *  param  string ied_tp_lng  Language of string to fetch
      *  param  string ied_tp_dflt Default language to fetch string if main lang missing
      * @return array              JSON response
      */
     public function textpack_get()
     {
-        $lbl = doSlash(gps('ied_tp_lbl'));
+        $lbl = join(',', quote_list(do_list(gps('ied_tp_lbl'))));
         $lng = doSlash(gps('ied_tp_lng'));
         $dflt = doSlash(gps('ied_tp_dflt'));
 
-        $rs = safe_rows('lang, data', 'txp_lang', "name='$lbl' AND (lang='$lng' OR lang='$dflt')");
+        $rs = safe_rows('name, lang, data', 'txp_lang', "name IN ($lbl) AND (lang='$lng' OR lang='$dflt')");
         $out = array();
 
         foreach ($rs as $row) {
             if (($row['lang'] == $dflt) && ($lng != $dflt)) {
-                $out['ied_plugin_tp_dflt'] = $row['data'];
+                $out['ied_plugin_tp_dflt'][$row['name']] = $row['data'];
             } else {
-                $out['ied_plugin_tp_string'] = $row['data'];
+                $out['ied_plugin_tp_string'][$row['name']] = $row['data'];
             }
         }
 
