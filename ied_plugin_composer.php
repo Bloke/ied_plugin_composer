@@ -1904,18 +1904,6 @@ jQuery(function () {
             jQuery('#options_group_pack ul').prepend('<li><input type="text" name="textpack_'+newname+'" value="" /> <select name="ied_plugin_tp_event">'+option+'</select> <label'+cls+'>'+newname+'</label>'+del+'</li>');
             jQuery('#ied_plugin_new_container').remove();
             jQuery('input[name="textpack_'+newname+'"]').focus();
-            jQuery('.ied-edit-form').on('change', '[name=ied_plugin_tp_event]', function(e) {
-                if (this.options[this.selectedIndex].value=='iedplugincustom') {
-                    ied_plugin_custom_toggle(this, this.nextSibling);
-                    this.selectedIndex='0';
-                }
-            });
-
-            jQuery('.ied-edit-form').on('blur', 'input[name=ied_plugin_tp_event]', function(e) {
-                if (this.value == '') {
-                    ied_plgin_custom_toggle(this, this.previousSibling);
-                }
-            });
         }
 
         ied_plugin_update_tp_count();
@@ -2016,12 +2004,6 @@ jQuery(function () {
         });
 
         ied_plugin_update_tp_count();
-    }
-
-    //
-    function ied_plugin_custom_toggle()
-    {
-
     }
 
     // Extract owner/prefix info.
@@ -3619,7 +3601,7 @@ EOJS
                 // Go through all the languages and put the default language at the start of the array.
                 foreach ($tp_rows as $row) {
                     // Add the event marker
-                    $theEvent = in_array($row['event'], array('public', 'common')) ? $row['event'] : $tp_pfx_info[1];
+                    $theEvent = $row['event'];
 
                     if ($prevlang != $row['lang']) {
                         $ctr++;
@@ -4509,7 +4491,7 @@ function ied_plugin_textpack_grab($lang, $prefix)
         $lang_query .= "owner = '".doSlash($prefix[0])."' AND ";
     }
 
-    return ($prefix[1]) ? safe_rows('name, data, lang, event', 'txp_lang', $lang_query."name LIKE '".doSlash($prefix[1])."%' ORDER BY event, lang, name") : array();
+    return ($prefix[1]) ? safe_rows('name, data, lang, event', 'txp_lang', $lang_query."name LIKE '".doSlash($prefix[1])."%' ORDER BY lang, event, name") : array();
 }
 
 /**
