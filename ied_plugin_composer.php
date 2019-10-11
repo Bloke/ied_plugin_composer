@@ -799,7 +799,7 @@ class ied_pc
             n. '<h1 class="txp-heading">'.gTxt('ied_plugin_composer').sp.$this->anchor($this->ied_pc_event, 'help_viewer', '?', array('name' => 'ied_plugin_composer'), array('class' => 'pophelp')).'</h1>'.
             n. '</div>'.
             n. '<div id="ied_plugin_control" class="txp-layout-2col">'.
-            n. sLink($this->ied_pc_event, 'prefs', gTxt('ied_plugin_setup'), 'ied_plugin_link').
+            n. sLink($this->ied_pc_event, 'prefs', '<span class="ui-icon ui-icon-wrench"></span>'.sp.gTxt('ied_plugin_setup'), 'ied_plugin_link').
             n. '</div>'.
             n. '<div class="txp-layout-1col">';
 
