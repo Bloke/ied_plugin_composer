@@ -3216,7 +3216,7 @@ EOJS
                 $re = '/h[0-6](\(.*\))?\./';
                 if (preg_match($re, $help)) {
                     $textile = new Textile();
-                    $out[0] = $textile->TextileThis($help);
+                    $out[0] = $textile->parse($help);
                 }
             }
         }
